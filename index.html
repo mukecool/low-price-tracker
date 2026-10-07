@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>购物价格记录</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+
+:root{
+  --bg:#f7f8fa;--card:#ffffff;--card-hover:#fafbfc;
+  --text:#111827;--text-2:#6b7280;--text-3:#9ca3af;
+  --border:#e8eaed;--border-2:#f0f1f3;
+  --accent:#4f46e5;--accent-bg:#eef2ff;
+  --success:#059669;--success-bg:#ecfdf5;
+  --warning:#d97706;--warning-bg:#fffbeb;
+  --danger:#dc2626;--danger-bg:#fef2f2;
+  --radius:16px;--radius-sm:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);
+  --shadow-lg:0 10px 32px rgba(16,24,40,.1);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0a0b0e;--card:#15171c;--card-hover:#1a1d24;
+    --text:#f1f3f5;--text-2:#9ca3af;--text-3:#6b7280;
+    --border:#262a33;--border-2:#1e2128;
+    --accent:#818cf8;--accent-bg:#312e8155;
+    --success:#34d399;--success-bg:#064e3b40;
+    --warning:#fbbf24;--warning-bg:#78350f40;
+    --danger:#f87171;--danger-bg:#7f1d1d40;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.4);
+    --shadow-lg:0 10px 32px rgba(0,0,0,.5);
+  }
+}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;
+  -webkit-font-smoothing:antialiased;font-size:15px;
+}
+input,select,button{font-family:inherit}
+
+.container{width:100%;max-width:1180px;margin:0 auto;padding-left:20px;padding-right:20px}
+@media(max-width:600px){.container{padding-left:14px;padding-right:14px}}
+
+/* ============ 顶栏 ============ */
+.topbar{
+  position:sticky;top:0;z-index:30;background:var(--bg);
+  border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top);
+}
+.topbar-inner{display:flex;align-items:center;gap:16px;height:60px}
+.brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;letter-spacing:-0.01em;flex:0 0 auto}
+.brand-icon{
+  width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#8b5cf6);
+  border-radius:9px;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;
+}
+.search-wrap{flex:1;position:relative;min-width:0}
+.search-wrap svg{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;color:var(--text-3);pointer-events:none;
+}
+.search-input{
+  width:100%;padding:9px 12px 9px 36px;border:1px solid var(--border);
+  border-radius:10px;background:var(--card);color:var(--text);font-size:14px;
+  outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.search-input::placeholder{color:var(--text-3)}
+.topbar-actions{display:flex;gap:8px;flex:0 0 auto;align-items:center}
+.icon-btn{
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text-2);cursor:pointer;
+  display:grid;place-items:center;transition:.15s;
+}
+.icon-btn:hover{background:var(--card-hover);color:var(--text)}
+.icon-btn:active{transform:scale(.94)}
+.icon-btn svg{width:17px;height:17px}
+.sync-status{
+  font-size:12px;color:var(--text-3);white-space:nowrap;
+  max-width:160px;overflow:hidden;text-overflow:ellipsis;
+}
+.sync-status.err{color:var(--danger)}
+@media(max-width:680px){
+  .sync-status{display:none}
+  .brand span{display:none}
+}
+
+/* ============ 工具栏 ============ */
+.toolbar{display:flex;align-items:center;gap:12px;padding-top:22px;flex-wrap:wrap}
+.chips{
+  display:flex;gap:6px;flex:1;min-width:0;
+  overflow-x:auto;scrollbar-width:none;padding-bottom:2px;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--border);background:var(--card);
+  color:var(--text-2);font-size:13px;font-weight:500;
+  cursor:pointer;transition:.15s;white-space:nowrap;
+}
+.chip:hover{background:var(--card-hover)}
+.chip.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.sort-select{
+  flex:0 0 auto;padding:8px 12px;border-radius:10px;
+  border:1px solid var(--border);background:var(--card);
+  color:var(--text);font-size:13px;cursor:pointer;outline:none;
+}
+
+/* ============ 网格 ============ */
+.grid{
+  display:grid;gap:16px;grid-template-columns:1fr;
+  padding-top:18px;padding-bottom:calc(100px + env(safe-area-inset-bottom));
+}
+@media(min-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1080px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* ============ 物品卡片 ============ */
+.item-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;
+  display:flex;flex-direction:column;gap:14px;
+  transition:box-shadow .2s,transform .2s,border-color .2s;
+  position:relative;
+}
+.item-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cat-tag{
+  display:inline-block;font-size:11px;font-weight:600;
+  color:var(--text-2);background:var(--bg);
+  padding:3px 8px;border-radius:6px;letter-spacing:.02em;
+}
+.buy-count{font-size:12px;color:var(--text-3);font-weight:500}
+.item-name{
+  font-size:17px;font-weight:700;letter-spacing:-0.015em;
+  line-height:1.35;margin:0;word-break:break-word;
+}
+
+.stats-row{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  padding:14px;background:var(--bg);border-radius:12px;
+}
+.stat-cell{display:flex;flex-direction:column;gap:3px;min-width:0}
+.stat-label{font-size:11px;color:var(--text-3);font-weight:500;letter-spacing:.02em}
+.stat-value{
+  font-size:17px;font-weight:700;letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;line-height:1.2;
+  color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.stat-cell.is-avg .stat-value{color:var(--accent)}
+.stat-cell.is-min .stat-value{color:var(--success)}
+.stat-value.empty{color:var(--text-3);font-weight:500;font-size:14px}
+
+.last-record{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;color:var(--text-2);padding:0 2px;min-width:0;
+}
+.last-record .dot{width:5px;height:5px;border-radius:50%;background:var(--text-3);flex:0 0 auto}
+.last-record .lr-date{font-variant-numeric:tabular-nums;color:var(--text-3);flex:0 0 auto}
+.last-record .lr-platform{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.last-record .lr-price{
+  margin-left:auto;font-weight:600;color:var(--text);
+  font-variant-numeric:tabular-nums;flex:0 0 auto;
+}
+
+.item-actions{
+  display:flex;gap:6px;align-items:center;
+  border-top:1px solid var(--border-2);padding-top:12px;margin-top:auto;
+  flex-wrap:wrap;
+}
+.btn-record{
+  flex:1;min-width:110px;padding:9px 14px;border-radius:9px;
+  border:none;background:var(--accent);color:#fff;
+  font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.btn-record:hover{filter:brightness(1.08)}
+.btn-record:active{transform:scale(.97)}
+.btn-tool{
+  padding:9px 12px;border-radius:9px;border:1px solid var(--border);
+  background:transparent;color:var(--text-2);font-size:13px;
+  font-weight:500;cursor:pointer;transition:.15s;white-space:nowrap;
+}
+.btn-tool:hover{background:var(--card-hover);color:var(--text)}
+.btn-tool.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* 历史面板 */
+.history-panel{
+  border-top:1px solid var(--border-2);padding-top:12px;
+  display:flex;flex-direction:column;gap:4px;
+  animation:slideDown .2s ease;
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.history-head{
+  font-size:11px;font-weight:600;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;
+}
+.record-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:9px;
+  font-size:13.5px;transition:background .15s;min-width:0;
+}
+.record-row:hover{background:var(--bg)}
+.record-row.is-min{background:var(--success-bg);color:var(--success)}
+.record-row.is-min .rec-price{color:var(--success);font-weight:700}
+.rec-date{font-variant-numeric:tabular-nums;color:var(--text-3);flex:0 0 auto;font-size:12.5px}
+.record-row.is-min .rec-date{color:var(--success);opacity:.8}
+.rec-platform{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;color:var(--text-2);
+}
+.record-row.is-min .rec-platform{color:var(--success);opacity:.9}
+.rec-price{font-weight:600;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.rec-qty{font-size:11px;color:var(--text-3);background:var(--bg);padding:1px 6px;border-radius:4px;flex:0 0 auto}
+.record-row.is-min .rec-qty{background:rgba(255,255,255,.3);color:var(--success)}
+.rec-actions{display:flex;gap:2px;flex:0 0 auto;opacity:0;transition:opacity .15s}
+.record-row:hover .rec-actions{opacity:1}
+@media(max-width:640px){.rec-actions{opacity:1}}
+.rec-act{
+  width:26px;height:26px;border-radius:7px;border:none;
+  background:transparent;color:var(--text-3);cursor:pointer;
+  font-size:14px;line-height:1;display:grid;place-items:center;transition:.15s;
+}
+.rec-act:hover{background:var(--border);color:var(--text)}
+.rec-act.del:hover{background:var(--danger-bg);color:var(--danger)}
+
+/* 比价面板 */
+.compare-panel{
+  border-top:1px solid var(--border-2);padding-top:12px;
+  display:flex;flex-direction:column;gap:10px;
+  animation:slideDown .2s ease;
+}
+.compare-input-row{display:flex;align-items:center;gap:10px}
+.compare-input-row label{font-size:13px;color:var(--text-2);font-weight:500;flex:0 0 auto}
+.compare-input-wrap{flex:1;position:relative;display:flex;align-items:center}
+.compare-input-wrap .cur{
+  position:absolute;left:11px;color:var(--text-3);
+  font-size:14px;pointer-events:none;font-weight:500;
+}
+.compare-input{
+  width:100%;padding:9px 12px 9px 26px;
+  border:1px solid var(--border);border-radius:9px;
+  background:var(--bg);color:var(--text);
+  font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
+  outline:none;transition:.15s;
+}
+.compare-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);background:var(--card)}
+.compare-result{
+  font-size:13px;line-height:1.6;padding:10px 12px;
+  border-radius:9px;background:var(--bg);display:none;
+}
+.compare-result.show{display:block}
+.cmp-line{display:flex;align-items:center;gap:6px}
+.cmp-line + .cmp-line{margin-top:3px}
+.cmp-badge{font-weight:700;font-variant-numeric:tabular-nums}
+.cmp-good{color:var(--success)}
+.cmp-warn{color:var(--warning)}
+.cmp-bad{color:var(--danger)}
+.cmp-muted{color:var(--text-3)}
+
+/* 空状态 */
+.empty{text-align:center;padding:80px 20px 60px;color:var(--text-2)}
+.empty-icon{
+  width:64px;height:64px;margin:0 auto 16px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;display:grid;place-items:center;
+  font-size:28px;box-shadow:var(--shadow);
+}
+.empty h3{margin:0 0 6px;font-size:16px;font-weight:600;color:var(--text)}
+.empty p{margin:0;font-size:13px;color:var(--text-3);line-height:1.7}
+
+/* FAB */
+.fab{
+  position:fixed;right:20px;bottom:calc(24px + env(safe-area-inset-bottom));
+  z-index:25;padding:14px 22px;border:none;border-radius:999px;
+  background:var(--accent);color:#fff;font-size:15px;font-weight:600;
+  cursor:pointer;box-shadow:0 8px 24px rgba(79,70,229,.35);
+  transition:.15s;display:flex;align-items:center;gap:6px;
+}
+.fab:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.fab:active{transform:scale(.96)}
+@media(max-width:600px){
+  .fab{right:14px;bottom:calc(18px + env(safe-area-inset-bottom));padding:13px 18px;font-size:14px}
+}
+
+/* ============ 按钮 ============ */
+.btn{
+  padding:10px 18px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);font-size:14px;font-weight:500;
+  cursor:pointer;transition:.15s;white-space:nowrap;
+}
+.btn:hover{background:var(--card-hover)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-2)}
+.btn-ghost:hover{background:var(--bg);color:var(--text)}
+
+/* ============ 弹窗 ============ */
+dialog{
+  border:none;border-radius:18px;padding:0;
+  width:min(520px,calc(100vw - 28px));max-height:88vh;
+  background:var(--card);color:var(--text);
+  box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden;
+}
+dialog::backdrop{background:rgba(0,0,0,.42);backdrop-filter:blur(3px)}
+.dlg{display:flex;flex-direction:column;max-height:88vh;margin:0}
+.dlg-head{
+  padding:20px 22px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto;
+}
+.dlg-head h3{margin:0;font-size:17px;font-weight:700;letter-spacing:-0.01em}
+.dlg-body{
+  padding:20px 22px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:16px;flex:1;
+}
+.dlg-foot{
+  padding:16px 22px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:8px;flex:0 0 auto;
+}
+@media(max-width:480px){.dlg-foot .btn{flex:1}}
+
+/* 表单 */
+.field{display:flex;flex-direction:column;gap:7px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field label{font-size:12.5px;font-weight:600;color:var(--text-2);letter-spacing:.01em}
+.input,input[type=text],input[type=password],input[type=number],
+input[type=search],input[type=date],select{
+  width:100%;padding:10px 13px;border:1px solid var(--border);
+  border-radius:10px;background:var(--bg);color:var(--text);
+  font-size:14.5px;outline:none;
+  transition:border-color .15s,box-shadow .15s,background .15s;
+}
+.input:focus,input:focus,select:focus{
+  border-color:var(--accent);background:var(--card);
+  box-shadow:0 0 0 3px var(--accent-bg);
+}
+input::placeholder{color:var(--text-3)}
+
+/* 常用平台 chips */
+.platform-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.platform-chips:empty{display:none}
+.platform-empty-hint{font-size:12px;color:var(--text-3);padding:2px 0;line-height:1.5}
+.platform-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 6px 5px 11px;border-radius:999px;
+  border:1px solid var(--border);background:var(--card);
+  color:var(--text-2);font-size:12.5px;font-weight:500;
+  cursor:pointer;transition:.15s;user-select:none;
+}
+.platform-chip:hover{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.platform-chip .pc-x{
+  width:16px;height:16px;border-radius:50%;
+  display:grid;place-items:center;font-size:13px;line-height:1;
+  color:var(--text-3);cursor:pointer;transition:.15s;
+}
+.platform-chip .pc-x:hover{background:rgba(220,38,38,.15);color:var(--danger)}
+
+/* 设置里的平台管理 */
+.platform-manage{
+  display:flex;flex-wrap:wrap;gap:6px;min-height:44px;
+  padding:11px 12px;border:1px solid var(--border);
+  border-radius:10px;background:var(--bg);
+  align-content:flex-start;
+}
+.platform-manage .platform-chip{background:var(--card)}
+.platform-manage:empty::before{
+  content:'暂无常用平台，可在下方添加';
+  color:var(--text-3);font-size:12.5px;margin:auto;
+}
+.platform-add{display:flex;gap:8px;margin-top:8px}
+.platform-add input{flex:1;min-width:0}
+.platform-add .btn{flex:0 0 auto;padding:10px 16px;font-size:13px}
+
+/* 设置提示 */
+.hint{
+  margin:0;font-size:12.5px;color:var(--text-3);line-height:1.7;
+  padding:12px 14px;background:var(--bg);border-radius:10px;
+}
+.hint b{color:var(--text-2);font-weight:600}
+.hint code{
+  background:var(--card);padding:1px 5px;border-radius:4px;
+  font-size:11.5px;border:1px solid var(--border);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+.gist-row{display:flex;gap:8px}
+.gist-row .input{flex:1;min-width:0}
+.gist-row .btn{flex:0 0 auto;padding:10px 14px;font-size:13px}
+
+/* 弹窗里的商品提示 */
+.item-hint{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 14px;background:var(--accent-bg);
+  border-radius:10px;font-size:14px;color:var(--accent);font-weight:600;
+}
+.item-hint .ih-label{
+  font-size:11px;font-weight:600;color:var(--accent);opacity:.7;
+  text-transform:uppercase;letter-spacing:.06em;
+}
+
+/* 滚动条 */
+.dlg-body::-webkit-scrollbar{width:8px}
+.dlg-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ================= 顶栏 ================= -->
+<header class="topbar">
+  <div class="container topbar-inner">
+    <div class="brand">
+      <div class="brand-icon">¥</div>
+      <span>价格记录</span>
+    </div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-3.5-3.5"/>
+      </svg>
+      <input id="search" class="search-input" type="search" placeholder="搜索物品、平台、备注…" autocomplete="off">
+    </div>
+    <div class="topbar-actions">
+      <span id="syncStatus" class="sync-status">本地模式</span>
+      <button class="icon-btn" id="btnSync" title="立即同步">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="btnSettings" title="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+  <div class="toolbar">
+    <div class="chips" id="chips"></div>
+    <select class="sort-select" id="sort">
+      <option value="recent">最近购买</option>
+      <option value="avg-asc">均价 ↑</option>
+      <option value="avg-desc">均价 ↓</option>
+      <option value="name">名称排序</option>
+      <option value="records">记录最多</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty" id="empty" hidden>
+    <div class="empty-icon">📝</div>
+    <h3>还没有记录</h3>
+    <p>添加常买的物品，比如牛奶、酱油、蛋白粉<br>每次买完记一笔，自动算出均价和最低价</p>
+  </div>
+</main>
+
+<button class="fab" id="btnAddItem">＋ 添加物品</button>
+
+<!-- ================= 设置弹窗 ================= -->
+<dialog id="dlgSettings">
+  <form method="dialog" class="dlg">
+    <div class="dlg-head"><h3>设置</h3></div>
+    <div class="dlg-body">
+
+      <div class="field">
+        <label>GitHub Token</label>
+        <input id="inpToken" type="password" placeholder="github_pat_xxxxxxxx" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>Gist ID</label>
+        <div class="gist-row">
+          <input id="inpGist" class="input" type="text" placeholder="已有 Gist 填这里" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn" id="btnCreateGist">创建新 Gist</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>常用平台</label>
+        <div class="platform-manage" id="platformManage"></div>
+        <div class="platform-add">
+          <input id="inpNewPlatform" type="text" placeholder="添加新平台…" autocomplete="off">
+          <button type="button" class="btn" id="btnAddPlatform">添加</button>
+        </div>
+      </div>
+
+      <p class="hint">
+        · <b>没有 Gist</b>：先填 Token，点「创建新 Gist」自动建好并回填 ID。<br>
+        · <b>已有 Gist</b>：把网址末尾那串字符填进来即可绑定。<br>
+        · Token 只存在本机浏览器，不会写进网页、也不会提交到仓库。<br>
+        · 建议 Fine-grained token，权限只勾 <code>Account permissions → Gists → Read and write</code>。
+      </p>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-ghost" value="cancel" formnovalidate>取消</button>
+      <button class="btn btn-primary" value="ok">保存并同步</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ================= 物品编辑弹窗 ================= -->
+<dialog id="dlgItem">
+  <form method="dialog" class="dlg">
+    <div class="dlg-head"><h3 id="itemTitle">添加物品</h3></div>
+    <div class="dlg-body">
+      <div class="field">
+        <label>物品名称</label>
+        <input id="inpName" type="text" placeholder="例如：德亚全脂牛奶 1L" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>分类</label>
+          <input id="inpCategory" type="text" list="categoryList" placeholder="乳制品 / 调味品…">
+          <datalist id="categoryList"></datalist>
+        </div>
+        <div class="field">
+          <label>单位（可选）</label>
+          <input id="inpUnit" type="text" placeholder="箱 / 瓶 / 袋">
+        </div>
+      </div>
+      <div class="field">
+        <label>备注（可选）</label>
+        <input id="inpNote" type="text" placeholder="记录规格、购买渠道偏好…">
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-ghost" value="cancel" formnovalidate>取消</button>
+      <button class="btn btn-primary" value="ok">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ================= 记录编辑弹窗 ================= -->
+<dialog id="dlgRecord">
+  <form method="dialog" class="dlg">
+    <div class="dlg-head"><h3 id="recordTitle">记录购买</h3></div>
+    <div class="dlg-body">
+      <div class="item-hint" id="recordItemHint" style="display:none">
+        <span class="ih-label">物品</span>
+        <span id="recordItemName"></span>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>日期</label>
+          <input id="inpDate" type="date" required>
+        </div>
+        <div class="field">
+          <label>数量（默认 1）</label>
+          <input id="inpQty" type="number" step="1" min="1" inputmode="numeric" placeholder="1">
+        </div>
+      </div>
+      <div class="field">
+        <label>平台 / 商店</label>
+        <input id="inpPlatform" type="text" placeholder="京东 / 淘宝 / 拼多多…" autocomplete="off">
+        <div class="platform-chips" id="platformChips"></div>
+      </div>
+      <div class="field">
+        <label>总价</label>
+        <input id="inpPrice" type="number" step="0.01" min="0" inputmode="decimal" placeholder="0.00" required>
+      </div>
+      <div class="field">
+        <label>备注（可选）</label>
+        <input id="inpRecordNote" type="text" placeholder="优惠券、满减信息…">
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button class="btn btn-ghost" value="cancel" formnovalidate>取消</button>
+      <button class="btn btn-primary" value="ok">保存</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= 常量 ================= */
+  const FILE_NAME = 'shopping-data.json';
+  const LS_CFG    = 'shopmin.cfg.v4';
+  const LS_DATA   = 'shopmin.data.v4';
+
+  const $ = s => document.querySelector(s);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+  const fmtMoney = n => {
+    const v = Number(n);
+    if (!isFinite(v)) return '—';
+    return '¥' + v.toFixed(2);
+  };
+  const today = () => {
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  };
+  const shortDate = s => {
+    if (!s) return '';
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return s;
+    const now = new Date();
+    const y = now.getFullYear();
+    return (m[1] === String(y) ? '' : m[1] + '/') + m[2] + '/' + m[3];
+  };
+  const timeStr = () => new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+  /* ================= 状态 ================= */
+  let cfg = { gistId: '', token: '' };
+  let state = { version: 4, updatedAt: 0, items: [], platforms: [] };
+  let activeCat = 'all';
+  let editingItemId = null;
+  let editingRecord = null;
+  let currentRecordItemId = null;
+  let pushing = false, pendingPush = false, saveTimer = null;
+
+  const expandedHistory = new Set();
+  const expandedCompare = new Map();
+
+  /* ================= DOM ================= */
+  const els = {
+    status: $('#syncStatus'),
+    grid: $('#grid'),
+    empty: $('#empty'),
+    search: $('#search'),
+    sort: $('#sort'),
+    chips: $('#chips'),
+    categoryList: $('#categoryList')
+  };
+
+  /* ================= 工具 ================= */
+  function setStatus(text, isErr) {
+    els.status.textContent = text;
+    els.status.classList.toggle('err', !!isErr);
+  }
+
+  function unitPrice(rec) {
+    const p = Number(rec.price);
+    const q = Number(rec.qty) || 1;
+    if (!isFinite(p) || q <= 0) return null;
+    return p / q;
+  }
+
+  function calcStats(item) {
+    const recs = (item.records || []).slice();
+    const valid = recs.filter(r => unitPrice(r) !== null);
+    const empty = { count: 0, avg: null, min: null, max: null, latest: null, minRec: null };
+    if (!valid.length) return empty;
+
+    const prices = valid.map(unitPrice);
+    const sum = prices.reduce((a, b) => a + b, 0);
+    const sorted = valid.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const latest = sorted[0];
+    const minPrice = Math.min(...prices);
+    const minRec = valid.find(r => unitPrice(r) === minPrice) || null;
+
+    return {
+      count: valid.length,
+      avg: sum / valid.length,
+      min: minPrice,
+      max: Math.max(...prices),
+      latest,
+      minRec
+    };
+  }
+
+  /* ================= 常用平台 ================= */
+  function rememberPlatform(name) {
+    name = (name || '').trim();
+    if (!name) return;
+    if (!Array.isArray(state.platforms)) state.platforms = [];
+    const idx = state.platforms.indexOf(name);
+    if (idx >= 0) state.platforms.splice(idx, 1);
+    state.platforms.unshift(name);
+    if (state.platforms.length > 30) state.platforms.length = 30;
+  }
+
+  function removePlatform(name) {
+    if (!Array.isArray(state.platforms)) return;
+    state.platforms = state.platforms.filter(p => p !== name);
+  }
+
+  function chipsHTML(list) {
+    return list.map(p =>
+      '<span class="platform-chip" data-platform="' + esc(p) + '">' +
+        esc(p) +
+        '<span class="pc-x" data-remove="' + esc(p) + '" title="从常用中移除">×</span>' +
+      '</span>'
+    ).join('');
+  }
+
+  function renderPlatformChips() {
+    const box = $('#platformChips');
+    if (!box) return;
+    const list = state.platforms || [];
+    if (!list.length) {
+      box.innerHTML = '<span class="platform-empty-hint">输入新平台并保存后，会自动记住供下次选择</span>';
+      return;
+    }
+    box.innerHTML = chipsHTML(list);
+  }
+
+  function renderPlatformManage() {
+    const box = $('#platformManage');
+    if (!box) return;
+    const list = state.platforms || [];
+    box.innerHTML = list.length ? chipsHTML(list) : '';
+  }
+
+  /* ================= 本地存储 ================= */
+  function loadLocal() {
+    try {
+      const c = JSON.parse(localStorage.getItem(LS_CFG));
+      if (c && typeof c === 'object') cfg = { gistId: c.gistId || '', token: c.token || '' };
+    } catch (e) {}
+    try {
+      const d = JSON.parse(localStorage.getItem(LS_DATA));
+      if (d && Array.isArray(d.items)) {
+        state = {
+          version: 4,
+          updatedAt: d.updatedAt || 0,
+          items: d.items,
+          platforms: Array.isArray(d.platforms) ? d.platforms.slice() : []
+        };
+        // 迁移：如果 platforms 为空，从历史记录中提取
+        if (!state.platforms.length) {
+          const seen = new Map();
+          state.items.forEach(it => {
+            (it.records || []).forEach(r => {
+              const p = (r.platform || '').trim();
+              if (p) seen.set(p, (seen.get(p) || 0) + 1);
+            });
+          });
+          state.platforms = [...seen.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(e => e[0]);
+        }
+      }
+    } catch (e) {}
+  }
+  function saveLocal() {
+    localStorage.setItem(LS_DATA, JSON.stringify(state));
+  }
+
+  /* ================= 云端同步 ================= */
+  async function pull() {
+    if (!cfg.gistId) { setStatus('本地模式'); return; }
+    setStatus('同步中…');
+    try {
+      const headers = { 'Accept': 'application/vnd.github+json' };
+      if (cfg.token) headers['Authorization'] = 'Bearer ' + cfg.token;
+
+      const res = await fetch('https://api.github.com/gists/' + encodeURIComponent(cfg.gistId),
+        { headers, cache: 'no-store' });
+      if (!res.ok) {
+        throw new Error('HTTP ' + res.status +
+          (res.status === 401 ? '（Token 无效）' :
+           res.status === 404 ? '（ID 或权限有误）' : ''));
+      }
+      const data = await res.json();
+      const file = data.files && data.files[FILE_NAME];
+
+      if (!file) { await push(); return; }
+
+      const parsed = JSON.parse(file.content || '{}');
+      if (Array.isArray(parsed.items)) {
+        state = {
+          version: 4,
+          updatedAt: parsed.updatedAt || 0,
+          items: parsed.items,
+          platforms: Array.isArray(parsed.platforms) ? parsed.platforms : []
+        };
+        // 迁移老数据：云端没有 platforms 时，从历史记录提取
+        if (!state.platforms.length) {
+          const seen = new Map();
+          state.items.forEach(it => {
+            (it.records || []).forEach(r => {
+              const p = (r.platform || '').trim();
+              if (p) seen.set(p, (seen.get(p) || 0) + 1);
+            });
+          });
+          state.platforms = [...seen.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .map(e => e[0]);
+        }
+        saveLocal();
+        render();
+      }
+      setStatus('已同步 · ' + timeStr());
+    } catch (err) {
+      setStatus('同步失败：' + err.message, true);
+    }
+  }
+
+  async function push() {
+    if (!cfg.gistId || !cfg.token) { setStatus('本地模式'); return; }
+    if (pushing) { pendingPush = true; return; }
+    pushing = true;
+    setStatus('保存中…');
+    try {
+      const content = JSON.stringify(state, null, 2);
+      const res = await fetch('https://api.github.com/gists/' + encodeURIComponent(cfg.gistId), {
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer ' + cfg.token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ files: { [FILE_NAME]: { content } } })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      localStorage.setItem(LS_DATA, content);
+      setStatus('已保存 · ' + timeStr());
+    } catch (err) {
+      setStatus('保存失败：' + err.message, true);
+    } finally {
+      pushing = false;
+      if (pendingPush) { pendingPush = false; push(); }
+    }
+  }
+
+  function save(immediate) {
+    saveLocal();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(push, immediate ? 0 : 1200);
+  }
+
+  /* ================= 渲染 ================= */
+  function renderChips() {
+    const cats = [...new Set((state.items || []).map(it => it.category).filter(Boolean))].sort();
+    if (activeCat !== 'all' && !cats.includes(activeCat)) activeCat = 'all';
+
+    let html = '<button class="chip' + (activeCat === 'all' ? ' active' : '') + '" data-cat="all">全部</button>';
+    cats.forEach(c => {
+      html += '<button class="chip' + (activeCat === c ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(c) + '</button>';
+    });
+    els.chips.innerHTML = html;
+    els.categoryList.innerHTML = cats.map(c => '<option value="' + esc(c) + '">').join('');
+  }
+
+  function recordRowHTML(item, rec, minRec) {
+    const isMin = minRec && rec.id === minRec.id;
+    const qty = Number(rec.qty) || 1;
+    const up = unitPrice(rec);
+
+    return '<div class="record-row' + (isMin ? ' is-min' : '') + '" data-rec-id="' + esc(rec.id) + '">' +
+      '<span class="rec-date">' + esc(shortDate(rec.date)) + '</span>' +
+      '<span class="rec-platform">' + esc(rec.platform || '未填平台') + '</span>' +
+      (qty > 1 ? '<span class="rec-qty">×' + qty + '</span>' : '') +
+      '<span class="rec-price">' + (up === null ? '—' : fmtMoney(up)) + '</span>' +
+      '<div class="rec-actions">' +
+        '<button class="rec-act" data-act="edit-rec" title="编辑">✎</button>' +
+        '<button class="rec-act del" data-act="del-rec" title="删除">×</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function itemCardHTML(item) {
+    const stats = calcStats(item);
+    const cat = item.category;
+    const showHistory = expandedHistory.has(item.id);
+    const compareVal = expandedCompare.get(item.id);
+    const showCompare = compareVal !== undefined;
+
+    const catTag = cat
+      ? '<span class="cat-tag">' + esc(cat) + '</span>'
+      : '<span></span>';
+
+    const countText = stats.count > 0 ? stats.count + ' 次购买' : '未记录';
+    const unitSuffix = item.unit ? ' / ' + esc(item.unit) : '';
+
+    const statAvg = stats.avg !== null
+      ? '<div class="stat-value">' + fmtMoney(stats.avg) + '</div>'
+      : '<div class="stat-value empty">—</div>';
+    const statMin = stats.min !== null
+      ? '<div class="stat-value">' + fmtMoney(stats.min) + '</div>'
+      : '<div class="stat-value empty">—</div>';
+    const statLatest = stats.latest
+      ? '<div class="stat-value">' + (unitPrice(stats.latest) === null ? '—' : fmtMoney(unitPrice(stats.latest))) + '</div>'
+      : '<div class="stat-value empty">—</div>';
+
+    let lastRow = '';
+    if (stats.latest) {
+      lastRow = '<div class="last-record">' +
+        '<span class="dot"></span>' +
+        '<span class="lr-date">' + esc(shortDate(stats.latest.date)) + '</span>' +
+        '<span class="lr-platform">' + esc(stats.latest.platform || '未填平台') + '</span>' +
+        '<span class="lr-price">' + fmtMoney(unitPrice(stats.latest)) + '</span>' +
+      '</div>';
+    }
+
+    let historyPanel = '';
+    if (showHistory) {
+      const sorted = (item.records || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+      const rows = sorted.map(r => recordRowHTML(item, r, stats.minRec)).join('');
+      historyPanel = '<div class="history-panel">' +
+        '<div class="history-head">购买历史 · ' + item.records.length + ' 条</div>' +
+        (rows || '<div style="font-size:13px;color:var(--text-3);padding:8px 4px">还没有记录</div>') +
+      '</div>';
+    }
+
+    let comparePanel = '';
+    if (showCompare) {
+      const inputVal = compareVal === '' ? '' : compareVal;
+      let result = '';
+      const v = Number(compareVal);
+      if (compareVal !== '' && isFinite(v) && v >= 0 && stats.avg !== null) {
+        const diffAvg = stats.avg - v;
+        const pct = stats.avg > 0 ? (diffAvg / stats.avg * 100) : 0;
+        const diffMin = stats.min !== null ? v - stats.min : null;
+
+        let line1, cls1;
+        if (diffAvg > 0.005) {
+          cls1 = 'cmp-good';
+          line1 = '✓ 比均价低 ' + fmtMoney(diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
+        } else if (diffAvg < -0.005) {
+          cls1 = 'cmp-warn';
+          line1 = '↑ 比均价高 ' + fmtMoney(-diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
+        } else {
+          cls1 = 'cmp-muted';
+          line1 = '≈ 与均价持平';
+        }
+
+        let line2 = '';
+        if (diffMin !== null) {
+          if (diffMin < -0.005) {
+            line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">🎉 比历史最低还低 ' + fmtMoney(-diffMin) + '</span></div>';
+          } else if (diffMin > 0.005) {
+            line2 = '<div class="cmp-line"><span class="cmp-badge cmp-muted">比历史最低高 ' + fmtMoney(diffMin) + '</span></div>';
+          } else {
+            line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">= 与历史最低持平</span></div>';
+          }
+        }
+
+        result = '<div class="cmp-line"><span class="cmp-badge ' + cls1 + '">' + line1 + '</span></div>' + line2;
+      } else if (compareVal !== '' && stats.avg === null) {
+        result = '<div class="cmp-line cmp-muted">还没有历史记录，无法对比</div>';
+      }
+
+      comparePanel = '<div class="compare-panel">' +
+        '<div class="compare-input-row">' +
+          '<label>看到的价格</label>' +
+          '<div class="compare-input-wrap">' +
+            '<span class="cur">¥</span>' +
+            '<input class="compare-input" type="number" step="0.01" min="0" inputmode="decimal" ' +
+              'placeholder="输入后自动对比" value="' + esc(inputVal) + '" ' +
+              'data-compare-id="' + esc(item.id) + '">' +
+          '</div>' +
+        '</div>' +
+        '<div class="compare-result' + (result ? ' show' : '') + '">' + result + '</div>' +
+      '</div>';
+    }
+
+    const hasRec = item.records && item.records.length > 0;
+
+    return '<article class="item-card" data-id="' + esc(item.id) + '">' +
+      '<div class="item-head">' +
+        catTag +
+        '<span class="buy-count">' + esc(countText) + '</span>' +
+      '</div>' +
+      '<h2 class="item-name">' + esc(item.name || '未命名') + '</h2>' +
+      '<div class="stats-row">' +
+        '<div class="stat-cell is-avg"><div class="stat-label">均价' + unitSuffix + '</div>' + statAvg + '</div>' +
+        '<div class="stat-cell is-min"><div class="stat-label">最低' + unitSuffix + '</div>' + statMin + '</div>' +
+        '<div class="stat-cell"><div class="stat-label">最近' + unitSuffix + '</div>' + statLatest + '</div>' +
+      '</div>' +
+      lastRow +
+      (item.note ? '<div class="last-record" style="color:var(--text-3);font-size:12.5px"><span class="dot"></span><span>' + esc(item.note) + '</span></div>' : '') +
+      '<div class="item-actions">' +
+        '<button class="btn-record" data-act="add-rec">＋ 记录购买</button>' +
+        '<button class="btn-tool' + (showHistory ? ' active' : '') + '" data-act="toggle-history">' +
+          (showHistory ? '收起' : '历史') +
+          (hasRec && !showHistory ? ' · ' + item.records.length : '') +
+        '</button>' +
+        '<button class="btn-tool' + (showCompare ? ' active' : '') + '" data-act="toggle-compare">比价</button>' +
+        '<button class="btn-tool" data-act="edit-item">编辑</button>' +
+      '</div>' +
+      historyPanel +
+      comparePanel +
+    '</article>';
+  }
+
+  function render() {
+    const q = els.search.value.trim().toLowerCase();
+    const sort = els.sort.value;
+
+    let items = (state.items || []).slice();
+
+    if (activeCat !== 'all') {
+      items = items.filter(it => it.category === activeCat);
+    }
+    if (q) {
+      items = items.filter(it =>
+        (it.name || '').toLowerCase().includes(q) ||
+        (it.note || '').toLowerCase().includes(q) ||
+        (it.category || '').toLowerCase().includes(q) ||
+        (it.records || []).some(r => (r.platform || '').toLowerCase().includes(q) ||
+                                     (r.note || '').toLowerCase().includes(q))
+      );
+    }
+
+    items.sort((a, b) => {
+      const sa = calcStats(a), sb = calcStats(b);
+      if (sort === 'name') return (a.name || '').localeCompare(b.name || '', 'zh-CN');
+      if (sort === 'records') return (b.records || []).length - (a.records || []).length;
+      if (sort === 'avg-asc') {
+        const va = sa.avg === null ? Infinity : sa.avg;
+        const vb = sb.avg === null ? Infinity : sb.avg;
+        return va - vb;
+      }
+      if (sort === 'avg-desc') {
+        const va = sa.avg === null ? -Infinity : sa.avg;
+        const vb = sb.avg === null ? -Infinity : sb.avg;
+        return vb - va;
+      }
+      const da = sa.latest ? String(sa.latest.date) : '';
+      const db = sb.latest ? String(sb.latest.date) : '';
+      if (da && db) return db.localeCompare(da);
+      if (da) return -1;
+      if (db) return 1;
+      return (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
+
+    renderChips();
+
+    if (!items.length) {
+      els.grid.innerHTML = '';
+      els.empty.hidden = false;
+      return;
+    }
+    els.empty.hidden = true;
+    els.grid.innerHTML = items.map(itemCardHTML).join('');
+  }
+
+  /* ================= 物品编辑弹窗 ================= */
+  function openItemDialog(id) {
+    editingItemId = id || null;
+    const it = id ? (state.items || []).find(x => x.id === id) : null;
+
+    $('#itemTitle').textContent = it ? '编辑物品' : '添加物品';
+    $('#inpName').value = it ? (it.name || '') : '';
+    $('#inpCategory').value = it ? (it.category || '') : '';
+    $('#inpUnit').value = it ? (it.unit || '') : '';
+    $('#inpNote').value = it ? (it.note || '') : '';
+
+    $('#dlgItem').showModal();
+    setTimeout(() => { if (!it) $('#inpName').focus(); }, 60);
+  }
+
+  $('#dlgItem').addEventListener('close', e => {
+    if (e.target.returnValue !== 'ok') return;
+
+    const name = $('#inpName').value.trim();
+    if (!name) { alert('请填写物品名称'); return; }
+
+    const now = Date.now();
+
+    if (editingItemId) {
+      const it = state.items.find(x => x.id === editingItemId);
+      if (it) {
+        it.name = name;
+        it.category = $('#inpCategory').value.trim();
+        it.unit = $('#inpUnit').value.trim();
+        it.note = $('#inpNote').value.trim();
+        it.updatedAt = now;
+      }
+    } else {
+      state.items.unshift({
+        id: uid(),
+        name,
+        category: $('#inpCategory').value.trim(),
+        unit: $('#inpUnit').value.trim(),
+        note: $('#inpNote').value.trim(),
+        records: [],
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+
+    state.updatedAt = now;
+    save();
+    render();
+  });
+
+  /* ================= 记录编辑弹窗 ================= */
+  function openRecordDialog(itemId, recordId) {
+    const item = (state.items || []).find(x => x.id === itemId);
+    if (!item) return;
+
+    currentRecordItemId = itemId;
+    editingRecord = recordId ? { itemId, recordId } : null;
+
+    const rec = recordId
+      ? (item.records || []).find(r => r.id === recordId)
+      : null;
+
+    $('#recordTitle').textContent = rec ? '编辑购买记录' : '记录购买';
+    $('#recordItemHint').style.display = 'flex';
+    $('#recordItemName').textContent = item.name + (item.unit ? '（' + item.unit + '）' : '');
+
+    $('#inpDate').value = rec ? rec.date : today();
+    $('#inpPlatform').value = rec ? (rec.platform || '') : '';
+    $('#inpPrice').value = rec ? (rec.price ?? '') : '';
+    $('#inpQty').value = rec ? (rec.qty || 1) : 1;
+    $('#inpRecordNote').value = rec ? (rec.note || '') : '';
+
+    renderPlatformChips();
+
+    $('#dlgRecord').showModal();
+    setTimeout(() => {
+      if (!rec) $('#inpPrice').focus();
+    }, 60);
+  }
+
+  // 常用平台 chips 交互（记录弹窗里）
+  $('#platformChips').addEventListener('click', e => {
+    const x = e.target.closest('[data-remove]');
+    if (x) {
+      e.preventDefault();
+      e.stopPropagation();
+      const p = x.dataset.remove;
+      if (confirm('从常用平台移除「' + p + '」？\n已有记录不受影响，只影响下次的建议列表。')) {
+        removePlatform(p);
+        save();
+        renderPlatformChips();
+        renderPlatformManage();
+      }
+      return;
+    }
+    const chip = e.target.closest('.platform-chip');
+    if (chip) {
+      $('#inpPlatform').value = chip.dataset.platform;
+      $('#inpPlatform').focus();
+    }
+  });
+
+  $('#dlgRecord').addEventListener('close', e => {
+    if (e.target.returnValue !== 'ok') return;
+
+    const item = (state.items || []).find(x => x.id === currentRecordItemId);
+    if (!item) return;
+
+    const date = $('#inpDate').value || today();
+    const platform = $('#inpPlatform').value.trim();
+    const priceRaw = $('#inpPrice').value.trim();
+    const qtyRaw = $('#inpQty').value.trim();
+    const note = $('#inpRecordNote').value.trim();
+
+    if (priceRaw === '') { alert('请填写价格'); return; }
+    const price = Number(priceRaw);
+    if (!isFinite(price) || price < 0) { alert('价格无效'); return; }
+
+    const qty = qtyRaw === '' ? 1 : Number(qtyRaw);
+    if (!isFinite(qty) || qty <= 0) { alert('数量无效'); return; }
+
+    // 记住这个平台
+    if (platform) rememberPlatform(platform);
+
+    const now = Date.now();
+
+    if (editingRecord) {
+      const rec = (item.records || []).find(r => r.id === editingRecord.recordId);
+      if (rec) {
+        rec.date = date;
+        rec.platform = platform;
+        rec.price = price;
+        rec.qty = qty;
+        rec.note = note;
+      }
+    } else {
+      if (!item.records) item.records = [];
+      item.records.push({
+        id: uid(),
+        date, platform, price, qty, note,
+        createdAt: now
+      });
+    }
+
+    item.updatedAt = now;
+    state.updatedAt = now;
+    save();
+    render();
+  });
+
+  /* ================= 设置弹窗 ================= */
+  $('#btnSettings').addEventListener('click', () => {
+    $('#inpGist').value = cfg.gistId;
+    $('#inpToken').value = cfg.token;
+    $('#inpNewPlatform').value = '';
+    renderPlatformManage();
+    $('#dlgSettings').showModal();
+  });
+
+  // 设置里的平台管理交互
+  $('#platformManage').addEventListener('click', e => {
+    const x = e.target.closest('[data-remove]');
+    if (!x) return;
+    const p = x.dataset.remove;
+    if (confirm('从常用平台移除「' + p + '」？\n已有记录不受影响，只影响下次的建议列表。')) {
+      removePlatform(p);
+      save();
+      renderPlatformChips();
+      renderPlatformManage();
+    }
+  });
+
+  function addNewPlatformFromSettings() {
+    const inp = $('#inpNewPlatform');
+    const v = inp.value.trim();
+    if (!v) { inp.focus(); return; }
+    if ((state.platforms || []).includes(v)) {
+      alert('「' + v + '」已经在常用列表里了');
+      inp.select();
+      return;
+    }
+    rememberPlatform(v);
+    inp.value = '';
+    save();
+    renderPlatformChips();
+    renderPlatformManage();
+  }
+
+  $('#btnAddPlatform').addEventListener('click', addNewPlatformFromSettings);
+  $('#inpNewPlatform').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewPlatformFromSettings();
+    }
+  });
+
+  $('#btnCreateGist').addEventListener('click', async () => {
+    const token = $('#inpToken').value.trim();
+    if (!token) {
+      alert('请先填写 GitHub Token，创建 Gist 需要它。');
+      $('#inpToken').focus();
+      return;
+    }
+
+    const btn = $('#btnCreateGist');
+    btn.disabled = true;
+    btn.textContent = '创建中…';
+
+    try {
+      const content = JSON.stringify(state, null, 2);
+      const res = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          description: '购物价格记录（自动同步）',
+          public: false,
+          files: { [FILE_NAME]: { content } }
+        })
+      });
+
+      if (!res.ok) {
+        let msg = 'HTTP ' + res.status;
+        if (res.status === 401) msg += '（Token 无效或过期）';
+        if (res.status === 403) msg += '（Token 缺少 gist 权限）';
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      $('#inpGist').value = data.id;
+
+      cfg.gistId = data.id;
+      cfg.token = token;
+      localStorage.setItem(LS_CFG, JSON.stringify(cfg));
+      setStatus('已创建 · ' + String(data.id).slice(0, 8) + '…');
+
+      alert('创建成功！\nGist ID：' + data.id + '\n已自动填入并保存，点「保存并同步」确认。');
+    } catch (err) {
+      alert('创建失败：' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '创建新 Gist';
+    }
+  });
+
+  $('#dlgSettings').addEventListener('close', e => {
+    if (e.target.returnValue !== 'ok') return;
+    cfg.gistId = $('#inpGist').value.trim();
+    cfg.token = $('#inpToken').value.trim();
+    localStorage.setItem(LS_CFG, JSON.stringify(cfg));
+    if (cfg.gistId) pull();
+    else setStatus('本地模式');
+  });
+
+  /* ================= 卡片事件委托 ================= */
+  els.grid.addEventListener('click', e => {
+    const card = e.target.closest('.item-card');
+    if (!card) return;
+    const itemId = card.dataset.id;
+    const item = (state.items || []).find(x => x.id === itemId);
+    if (!item) return;
+
+    const actBtn = e.target.closest('[data-act]');
+    if (actBtn) {
+      const act = actBtn.dataset.act;
+
+      if (act === 'add-rec') {
+        openRecordDialog(itemId, null);
+      } else if (act === 'edit-item') {
+        openItemDialog(itemId);
+      } else if (act === 'toggle-history') {
+        if (expandedHistory.has(itemId)) expandedHistory.delete(itemId);
+        else expandedHistory.add(itemId);
+        render();
+      } else if (act === 'toggle-compare') {
+        if (expandedCompare.has(itemId)) expandedCompare.delete(itemId);
+        else expandedCompare.set(itemId, '');
+        render();
+      } else if (act === 'edit-rec') {
+        const recId = e.target.closest('.record-row')?.dataset.recId;
+        if (recId) openRecordDialog(itemId, recId);
+      } else if (act === 'del-rec') {
+        const recId = e.target.closest('.record-row')?.dataset.recId;
+        if (!recId) return;
+        if (confirm('删除这条记录？')) {
+          item.records = (item.records || []).filter(r => r.id !== recId);
+          item.updatedAt = Date.now();
+          state.updatedAt = Date.now();
+          save(true);
+          render();
+        }
+      }
+      return;
+    }
+
+    const cmpInput = card.querySelector('.compare-input');
+    if (cmpInput && e.target === card) {
+      cmpInput.focus();
+    }
+  });
+
+  els.grid.addEventListener('input', e => {
+    const inp = e.target.closest('.compare-input');
+    if (!inp) return;
+    const itemId = inp.dataset.compareId;
+    const val = inp.value;
+
+    expandedCompare.set(itemId, val);
+
+    const card = inp.closest('.item-card');
+    const resultEl = card.querySelector('.compare-result');
+    const item = (state.items || []).find(x => x.id === itemId);
+    if (!item || !resultEl) return;
+
+    const stats = calcStats(item);
+    const v = Number(val);
+
+    if (val === '' || !isFinite(v) || v < 0) {
+      resultEl.classList.remove('show');
+      resultEl.innerHTML = '';
+      return;
+    }
+    if (stats.avg === null) {
+      resultEl.classList.add('show');
+      resultEl.innerHTML = '<div class="cmp-line cmp-muted">还没有历史记录，无法对比</div>';
+      return;
+    }
+
+    const diffAvg = stats.avg - v;
+    const pct = stats.avg > 0 ? (diffAvg / stats.avg * 100) : 0;
+    const diffMin = stats.min !== null ? v - stats.min : null;
+
+    let line1, cls1;
+    if (diffAvg > 0.005) {
+      cls1 = 'cmp-good';
+      line1 = '✓ 比均价低 ' + fmtMoney(diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
+    } else if (diffAvg < -0.005) {
+      cls1 = 'cmp-warn';
+      line1 = '↑ 比均价高 ' + fmtMoney(-diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
+    } else {
+      cls1 = 'cmp-muted';
+      line1 = '≈ 与均价持平';
+    }
+
+    let line2 = '';
+    if (diffMin !== null) {
+      if (diffMin < -0.005) {
+        line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">🎉 比历史最低还低 ' + fmtMoney(-diffMin) + '</span></div>';
+      } else if (diffMin > 0.005) {
+        line2 = '<div class="cmp-line"><span class="cmp-badge cmp-muted">比历史最低高 ' + fmtMoney(diffMin) + '</span></div>';
+      } else {
+        line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">= 与历史最低持平</span></div>';
+      }
+    }
+
+    resultEl.classList.add('show');
+    resultEl.innerHTML = '<div class="cmp-line"><span class="cmp-badge ' + cls1 + '">' + line1 + '</span></div>' + line2;
+  });
+
+  /* ================= 分类 / 搜索 / 排序 ================= */
+  els.chips.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    activeCat = chip.dataset.cat;
+    render();
+  });
+
+  els.search.addEventListener('input', render);
+  els.sort.addEventListener('change', render);
+
+  $('#btnAddItem').addEventListener('click', () => openItemDialog(null));
+  $('#btnSync').addEventListener('click', () => pull());
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      push();
+    }
+  });
+
+  /* ================= 启动 ================= */
+  loadLocal();
+  render();
+
+  if (cfg.gistId) {
+    pull();
+  } else {
+    setStatus('本地模式 · 点 ⚙ 配置同步');
+  }
+})();
+</script>
+</body>
+</html>
