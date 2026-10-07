@@ -17,9 +17,9 @@ html,body{margin:0;padding:0}
   --success:#059669;--success-bg:#ecfdf5;
   --warning:#d97706;--warning-bg:#fffbeb;
   --danger:#dc2626;--danger-bg:#fef2f2;
-  --radius:16px;--radius-sm:10px;
-  --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);
-  --shadow-lg:0 10px 32px rgba(16,24,40,.1);
+  --radius:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.04),0 1px 2px rgba(16,24,40,.05);
+  --shadow-lg:0 8px 24px rgba(16,24,40,.1);
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -31,55 +31,56 @@ html,body{margin:0;padding:0}
     --warning:#fbbf24;--warning-bg:#78350f40;
     --danger:#f87171;--danger-bg:#7f1d1d40;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.4);
-    --shadow-lg:0 10px 32px rgba(0,0,0,.5);
+    --shadow-lg:0 8px 24px rgba(0,0,0,.5);
   }
 }
 
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   background:var(--bg);color:var(--text);line-height:1.5;
-  -webkit-font-smoothing:antialiased;font-size:15px;
+  -webkit-font-smoothing:antialiased;font-size:14px;
 }
 input,select,button{font-family:inherit}
 
-.container{width:100%;max-width:1180px;margin:0 auto;padding-left:20px;padding-right:20px}
-@media(max-width:600px){.container{padding-left:14px;padding-right:14px}}
+.container{width:100%;max-width:1400px;margin:0 auto;padding-left:12px;padding-right:12px}
+@media(max-width:600px){.container{padding-left:8px;padding-right:8px}}
 
 /* ============ 顶栏 ============ */
 .topbar{
   position:sticky;top:0;z-index:30;background:var(--bg);
   border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top);
 }
-.topbar-inner{display:flex;align-items:center;gap:16px;height:60px}
-.brand{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:700;letter-spacing:-0.01em;flex:0 0 auto}
+.topbar-inner{display:flex;align-items:center;gap:10px;height:48px}
+.brand{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:700;letter-spacing:-0.01em;flex:0 0 auto}
 .brand-icon{
-  width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#8b5cf6);
-  border-radius:9px;display:grid;place-items:center;color:#fff;font-size:15px;font-weight:800;
+  width:24px;height:24px;background:linear-gradient(135deg,var(--accent),#8b5cf6);
+  border-radius:7px;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;
 }
 .search-wrap{flex:1;position:relative;min-width:0}
 .search-wrap svg{
-  position:absolute;left:12px;top:50%;transform:translateY(-50%);
-  width:16px;height:16px;color:var(--text-3);pointer-events:none;
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;color:var(--text-3);pointer-events:none;
 }
-.search-input{
-  width:100%;padding:9px 12px 9px 36px;border:1px solid var(--border);
-  border-radius:10px;background:var(--card);color:var(--text);font-size:14px;
+/* 用 .search-wrap input 提升优先级，且放在通用 input 规则后面声明效果更好 */
+.search-wrap input.search-input{
+  width:100%;padding:6px 10px 6px 32px;border:1px solid var(--border);
+  border-radius:8px;background:var(--card);color:var(--text);font-size:13px;
   outline:none;transition:border-color .15s,box-shadow .15s;
 }
-.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
-.search-input::placeholder{color:var(--text-3)}
-.topbar-actions{display:flex;gap:8px;flex:0 0 auto;align-items:center}
+.search-wrap input.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.search-wrap input.search-input::placeholder{color:var(--text-3)}
+.topbar-actions{display:flex;gap:5px;flex:0 0 auto;align-items:center}
 .icon-btn{
-  width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
   background:var(--card);color:var(--text-2);cursor:pointer;
   display:grid;place-items:center;transition:.15s;
 }
 .icon-btn:hover{background:var(--card-hover);color:var(--text)}
 .icon-btn:active{transform:scale(.94)}
-.icon-btn svg{width:17px;height:17px}
+.icon-btn svg{width:14px;height:14px}
 .sync-status{
-  font-size:12px;color:var(--text-3);white-space:nowrap;
-  max-width:160px;overflow:hidden;text-overflow:ellipsis;
+  font-size:11px;color:var(--text-3);white-space:nowrap;
+  max-width:120px;overflow:hidden;text-overflow:ellipsis;
 }
 .sync-status.err{color:var(--danger)}
 @media(max-width:680px){
@@ -88,171 +89,204 @@ input,select,button{font-family:inherit}
 }
 
 /* ============ 工具栏 ============ */
-.toolbar{display:flex;align-items:center;gap:12px;padding-top:22px;flex-wrap:wrap}
+.toolbar{display:flex;align-items:center;gap:8px;padding-top:12px;flex-wrap:wrap}
 .chips{
-  display:flex;gap:6px;flex:1;min-width:0;
+  display:flex;gap:4px;flex:1;min-width:0;
   overflow-x:auto;scrollbar-width:none;padding-bottom:2px;
 }
 .chips::-webkit-scrollbar{display:none}
 .chip{
-  flex:0 0 auto;padding:7px 14px;border-radius:999px;
+  flex:0 0 auto;padding:4px 10px;border-radius:999px;
   border:1px solid var(--border);background:var(--card);
-  color:var(--text-2);font-size:13px;font-weight:500;
+  color:var(--text-2);font-size:12px;font-weight:500;
   cursor:pointer;transition:.15s;white-space:nowrap;
 }
 .chip:hover{background:var(--card-hover)}
 .chip.active{background:var(--text);color:var(--bg);border-color:var(--text)}
 .sort-select{
-  flex:0 0 auto;padding:8px 12px;border-radius:10px;
+  flex:0 0 auto;padding:5px 8px;border-radius:8px;
   border:1px solid var(--border);background:var(--card);
-  color:var(--text);font-size:13px;cursor:pointer;outline:none;
+  color:var(--text);font-size:12px;cursor:pointer;outline:none;
 }
 
-/* ============ 网格 ============ */
+/* ============ 网格（更密） ============ */
 .grid{
-  display:grid;gap:16px;grid-template-columns:1fr;
-  padding-top:18px;padding-bottom:calc(100px + env(safe-area-inset-bottom));
+  display:grid;gap:6px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  padding-top:10px;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom));
 }
-@media(min-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(min-width:1080px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:480px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}}
+@media(min-width:720px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}}
+@media(min-width:980px){.grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}}
+@media(min-width:1280px){.grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}}
 
-/* ============ 物品卡片 ============ */
+/* ============ 物品卡片（紧凑） ============ */
 .item-card{
   background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:18px;
-  display:flex;flex-direction:column;gap:14px;
-  transition:box-shadow .2s,transform .2s,border-color .2s;
-  position:relative;
+  border-radius:var(--radius);padding:8px;
+  display:flex;flex-direction:column;gap:4px;
+  transition:border-color .15s,background .15s;
+  position:relative;min-width:0;cursor:pointer;
 }
-.item-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
-.item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.item-card:hover{border-color:var(--text-3)}
+.item-card.expanded{
+  grid-column:1/-1;
+  padding:14px;
+  gap:10px;
+  cursor:default;
+}
+
+/* 卡片顶部 */
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0}
 .cat-tag{
-  display:inline-block;font-size:11px;font-weight:600;
+  font-size:9.5px;font-weight:600;
   color:var(--text-2);background:var(--bg);
-  padding:3px 8px;border-radius:6px;letter-spacing:.02em;
+  padding:1px 5px;border-radius:4px;letter-spacing:.02em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:60%;
 }
-.buy-count{font-size:12px;color:var(--text-3);font-weight:500}
+.buy-count{font-size:10px;color:var(--text-3);font-weight:500;flex:0 0 auto}
+
 .item-name{
-  font-size:17px;font-weight:700;letter-spacing:-0.015em;
-  line-height:1.35;margin:0;word-break:break-word;
+  font-size:12px;font-weight:600;letter-spacing:-0.005em;
+  line-height:1.3;margin:0;word-break:break-word;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;min-height:31px;
+}
+.item-card.expanded .item-name{
+  font-size:16px;display:block;-webkit-line-clamp:unset;
+  line-height:1.35;min-height:0;font-weight:650;
 }
 
-.stats-row{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-  padding:14px;background:var(--bg);border-radius:12px;
+/* 价格行 */
+.card-prices{
+  display:flex;align-items:baseline;gap:8px;
+  padding-top:1px;
 }
-.stat-cell{display:flex;flex-direction:column;gap:3px;min-width:0}
-.stat-label{font-size:11px;color:var(--text-3);font-weight:500;letter-spacing:.02em}
-.stat-value{
-  font-size:17px;font-weight:700;letter-spacing:-0.02em;
-  font-variant-numeric:tabular-nums;line-height:1.2;
-  color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+.cp{display:flex;flex-direction:column;gap:0;min-width:0}
+.cp-num{
+  font-size:13px;font-weight:700;letter-spacing:-0.02em;
+  font-variant-numeric:tabular-nums;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.stat-cell.is-avg .stat-value{color:var(--accent)}
-.stat-cell.is-min .stat-value{color:var(--success)}
-.stat-value.empty{color:var(--text-3);font-weight:500;font-size:14px}
+.cp-min .cp-num{color:var(--success)}
+.cp-avg .cp-num{color:var(--accent);font-size:11px;font-weight:600}
+.cp-lbl{
+  font-size:9px;color:var(--text-3);
+  font-weight:500;letter-spacing:.02em;
+}
+.item-card.expanded .card-prices{gap:22px;padding:8px 0 10px}
+.item-card.expanded .cp-num{font-size:22px}
+.item-card.expanded .cp-avg .cp-num{font-size:18px}
+.item-card.expanded .cp-lbl{font-size:11px}
 
-.last-record{
-  display:flex;align-items:center;gap:8px;
-  font-size:13px;color:var(--text-2);padding:0 2px;min-width:0;
+/* 卡片底部 */
+.card-bottom{
+  display:flex;align-items:center;justify-content:space-between;gap:4px;
+  margin-top:auto;padding-top:4px;
 }
-.last-record .dot{width:5px;height:5px;border-radius:50%;background:var(--text-3);flex:0 0 auto}
-.last-record .lr-date{font-variant-numeric:tabular-nums;color:var(--text-3);flex:0 0 auto}
-.last-record .lr-platform{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.last-record .lr-price{
-  margin-left:auto;font-weight:600;color:var(--text);
-  font-variant-numeric:tabular-nums;flex:0 0 auto;
+.last-info{
+  font-size:10px;color:var(--text-3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  flex:1;min-width:0;
 }
+.quick-add{
+  width:22px;height:22px;border-radius:6px;
+  border:none;background:var(--accent);
+  cursor:pointer;flex:0 0 auto;position:relative;
+  display:block;padding:0;
+  transition:.15s;
+}
+.quick-add::before,
+.quick-add::after{
+  content:'';position:absolute;
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  background:#fff;border-radius:1px;
+}
+.quick-add::before{width:11px;height:1.5px}
+.quick-add::after{width:1.5px;height:11px}
+.quick-add:hover{filter:brightness(1.08)}
+.quick-add:active{transform:scale(.9)}
 
-.item-actions{
-  display:flex;gap:6px;align-items:center;
-  border-top:1px solid var(--border-2);padding-top:12px;margin-top:auto;
-  flex-wrap:wrap;
+/* 展开区 */
+.card-expanded{
+  display:none;flex-direction:column;gap:10px;
+  padding-top:10px;border-top:1px solid var(--border-2);
+  cursor:default;
 }
-.btn-record{
-  flex:1;min-width:110px;padding:9px 14px;border-radius:9px;
-  border:none;background:var(--accent);color:#fff;
-  font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;
-  display:flex;align-items:center;justify-content:center;gap:5px;
-}
-.btn-record:hover{filter:brightness(1.08)}
-.btn-record:active{transform:scale(.97)}
+.item-card.expanded .card-expanded{display:flex}
+
+.expanded-actions{display:flex;gap:6px;flex-wrap:wrap}
 .btn-tool{
-  padding:9px 12px;border-radius:9px;border:1px solid var(--border);
-  background:transparent;color:var(--text-2);font-size:13px;
+  padding:6px 11px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--text-2);font-size:12px;
   font-weight:500;cursor:pointer;transition:.15s;white-space:nowrap;
 }
 .btn-tool:hover{background:var(--card-hover);color:var(--text)}
 .btn-tool.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+.btn-tool.danger:hover{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
 
 /* 历史面板 */
-.history-panel{
-  border-top:1px solid var(--border-2);padding-top:12px;
-  display:flex;flex-direction:column;gap:4px;
-  animation:slideDown .2s ease;
-}
-@keyframes slideDown{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.history-panel{display:flex;flex-direction:column;gap:2px;animation:slideDown .18s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
 .history-head{
-  font-size:11px;font-weight:600;color:var(--text-3);
-  text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;
+  font-size:10.5px;font-weight:600;color:var(--text-3);
+  text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;
 }
 .record-row{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 10px;border-radius:9px;
-  font-size:13.5px;transition:background .15s;min-width:0;
+  display:flex;align-items:center;gap:9px;
+  padding:6px 9px;border-radius:7px;
+  font-size:12.5px;transition:background .15s;min-width:0;
 }
 .record-row:hover{background:var(--bg)}
 .record-row.is-min{background:var(--success-bg);color:var(--success)}
 .record-row.is-min .rec-price{color:var(--success);font-weight:700}
-.rec-date{font-variant-numeric:tabular-nums;color:var(--text-3);flex:0 0 auto;font-size:12.5px}
-.record-row.is-min .rec-date{color:var(--success);opacity:.8}
+.rec-date{font-variant-numeric:tabular-nums;color:var(--text-3);flex:0 0 auto;font-size:11.5px}
+.record-row.is-min .rec-date{color:var(--success);opacity:.85}
 .rec-platform{
   flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;color:var(--text-2);
 }
 .record-row.is-min .rec-platform{color:var(--success);opacity:.9}
 .rec-price{font-weight:600;font-variant-numeric:tabular-nums;flex:0 0 auto}
-.rec-qty{font-size:11px;color:var(--text-3);background:var(--bg);padding:1px 6px;border-radius:4px;flex:0 0 auto}
+.rec-qty{font-size:10.5px;color:var(--text-3);background:var(--bg);padding:1px 5px;border-radius:3px;flex:0 0 auto}
 .record-row.is-min .rec-qty{background:rgba(255,255,255,.3);color:var(--success)}
-.rec-actions{display:flex;gap:2px;flex:0 0 auto;opacity:0;transition:opacity .15s}
+.rec-actions{display:flex;gap:1px;flex:0 0 auto;opacity:0;transition:opacity .15s}
 .record-row:hover .rec-actions{opacity:1}
 @media(max-width:640px){.rec-actions{opacity:1}}
 .rec-act{
-  width:26px;height:26px;border-radius:7px;border:none;
+  width:24px;height:24px;border-radius:6px;border:none;
   background:transparent;color:var(--text-3);cursor:pointer;
-  font-size:14px;line-height:1;display:grid;place-items:center;transition:.15s;
+  font-size:13px;line-height:1;display:grid;place-items:center;transition:.15s;
 }
 .rec-act:hover{background:var(--border);color:var(--text)}
 .rec-act.del:hover{background:var(--danger-bg);color:var(--danger)}
 
 /* 比价面板 */
-.compare-panel{
-  border-top:1px solid var(--border-2);padding-top:12px;
-  display:flex;flex-direction:column;gap:10px;
-  animation:slideDown .2s ease;
-}
-.compare-input-row{display:flex;align-items:center;gap:10px}
-.compare-input-row label{font-size:13px;color:var(--text-2);font-weight:500;flex:0 0 auto}
-.compare-input-wrap{flex:1;position:relative;display:flex;align-items:center}
+.compare-panel{display:flex;flex-direction:column;gap:8px;animation:slideDown .18s ease}
+.compare-input-row{display:flex;align-items:center;gap:9px}
+.compare-input-row label{font-size:12px;color:var(--text-2);font-weight:500;flex:0 0 auto}
+.compare-input-wrap{flex:1;position:relative;display:flex;align-items:center;max-width:300px}
 .compare-input-wrap .cur{
-  position:absolute;left:11px;color:var(--text-3);
-  font-size:14px;pointer-events:none;font-weight:500;
+  position:absolute;left:10px;color:var(--text-3);
+  font-size:13px;pointer-events:none;font-weight:500;
 }
 .compare-input{
-  width:100%;padding:9px 12px 9px 26px;
-  border:1px solid var(--border);border-radius:9px;
+  width:100%;padding:7px 11px 7px 26px;
+  border:1px solid var(--border);border-radius:8px;
   background:var(--bg);color:var(--text);
-  font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
+  font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;
   outline:none;transition:.15s;
 }
 .compare-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);background:var(--card)}
 .compare-result{
-  font-size:13px;line-height:1.6;padding:10px 12px;
-  border-radius:9px;background:var(--bg);display:none;
+  font-size:12.5px;line-height:1.6;padding:9px 11px;
+  border-radius:8px;background:var(--bg);display:none;
 }
 .compare-result.show{display:block}
-.cmp-line{display:flex;align-items:center;gap:6px}
-.cmp-line + .cmp-line{margin-top:3px}
+.cmp-line{display:flex;align-items:center;gap:5px}
+.cmp-line + .cmp-line{margin-top:2px}
 .cmp-badge{font-weight:700;font-variant-numeric:tabular-nums}
 .cmp-good{color:var(--success)}
 .cmp-warn{color:var(--warning)}
@@ -260,34 +294,34 @@ input,select,button{font-family:inherit}
 .cmp-muted{color:var(--text-3)}
 
 /* 空状态 */
-.empty{text-align:center;padding:80px 20px 60px;color:var(--text-2)}
+.empty{text-align:center;padding:60px 16px 50px;color:var(--text-2)}
 .empty-icon{
-  width:64px;height:64px;margin:0 auto 16px;
+  width:56px;height:56px;margin:0 auto 14px;
   background:var(--card);border:1px solid var(--border);
-  border-radius:20px;display:grid;place-items:center;
-  font-size:28px;box-shadow:var(--shadow);
+  border-radius:18px;display:grid;place-items:center;
+  font-size:24px;box-shadow:var(--shadow);
 }
-.empty h3{margin:0 0 6px;font-size:16px;font-weight:600;color:var(--text)}
-.empty p{margin:0;font-size:13px;color:var(--text-3);line-height:1.7}
+.empty h3{margin:0 0 5px;font-size:15px;font-weight:600;color:var(--text)}
+.empty p{margin:0;font-size:12.5px;color:var(--text-3);line-height:1.7}
 
 /* FAB */
 .fab{
-  position:fixed;right:20px;bottom:calc(24px + env(safe-area-inset-bottom));
-  z-index:25;padding:14px 22px;border:none;border-radius:999px;
-  background:var(--accent);color:#fff;font-size:15px;font-weight:600;
-  cursor:pointer;box-shadow:0 8px 24px rgba(79,70,229,.35);
-  transition:.15s;display:flex;align-items:center;gap:6px;
+  position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:25;padding:10px 16px;border:none;border-radius:999px;
+  background:var(--accent);color:#fff;font-size:13px;font-weight:600;
+  cursor:pointer;box-shadow:0 5px 16px rgba(79,70,229,.35);
+  transition:.15s;display:flex;align-items:center;gap:4px;
 }
 .fab:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .fab:active{transform:scale(.96)}
 @media(max-width:600px){
-  .fab{right:14px;bottom:calc(18px + env(safe-area-inset-bottom));padding:13px 18px;font-size:14px}
+  .fab{right:10px;bottom:calc(10px + env(safe-area-inset-bottom));padding:9px 14px;font-size:12.5px}
 }
 
 /* ============ 按钮 ============ */
 .btn{
-  padding:10px 18px;border-radius:10px;border:1px solid var(--border);
-  background:var(--card);color:var(--text);font-size:14px;font-weight:500;
+  padding:9px 16px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);font-size:13.5px;font-weight:500;
   cursor:pointer;transition:.15s;white-space:nowrap;
 }
 .btn:hover{background:var(--card-hover)}
@@ -300,37 +334,37 @@ input,select,button{font-family:inherit}
 
 /* ============ 弹窗 ============ */
 dialog{
-  border:none;border-radius:18px;padding:0;
-  width:min(520px,calc(100vw - 28px));max-height:88vh;
+  border:none;border-radius:16px;padding:0;
+  width:min(500px,calc(100vw - 24px));max-height:88vh;
   background:var(--card);color:var(--text);
   box-shadow:0 24px 64px rgba(0,0,0,.28);overflow:hidden;
 }
 dialog::backdrop{background:rgba(0,0,0,.42);backdrop-filter:blur(3px)}
 .dlg{display:flex;flex-direction:column;max-height:88vh;margin:0}
 .dlg-head{
-  padding:20px 22px 16px;border-bottom:1px solid var(--border);
+  padding:18px 20px 14px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto;
 }
-.dlg-head h3{margin:0;font-size:17px;font-weight:700;letter-spacing:-0.01em}
+.dlg-head h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-0.01em}
 .dlg-body{
-  padding:20px 22px;overflow-y:auto;
-  display:flex;flex-direction:column;gap:16px;flex:1;
+  padding:18px 20px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:14px;flex:1;
 }
 .dlg-foot{
-  padding:16px 22px 20px;border-top:1px solid var(--border);
+  padding:14px 20px 18px;border-top:1px solid var(--border);
   display:flex;justify-content:flex-end;gap:8px;flex:0 0 auto;
 }
 @media(max-width:480px){.dlg-foot .btn{flex:1}}
 
-/* 表单 */
-.field{display:flex;flex-direction:column;gap:7px}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field label{font-size:12.5px;font-weight:600;color:var(--text-2);letter-spacing:.01em}
+/* 表单 —— 注意：这里不再包含 input[type=search]，避免覆盖顶栏搜索框 */
+.field{display:flex;flex-direction:column;gap:6px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field label{font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.01em}
 .input,input[type=text],input[type=password],input[type=number],
-input[type=search],input[type=date],select{
-  width:100%;padding:10px 13px;border:1px solid var(--border);
-  border-radius:10px;background:var(--bg);color:var(--text);
-  font-size:14.5px;outline:none;
+input[type=date],select{
+  width:100%;padding:9px 12px;border:1px solid var(--border);
+  border-radius:9px;background:var(--bg);color:var(--text);
+  font-size:14px;outline:none;
   transition:border-color .15s,box-shadow .15s,background .15s;
 }
 .input:focus,input:focus,select:focus{
@@ -340,63 +374,62 @@ input[type=search],input[type=date],select{
 input::placeholder{color:var(--text-3)}
 
 /* 常用平台 chips */
-.platform-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.platform-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
 .platform-chips:empty{display:none}
-.platform-empty-hint{font-size:12px;color:var(--text-3);padding:2px 0;line-height:1.5}
+.platform-empty-hint{font-size:11.5px;color:var(--text-3);padding:2px 0;line-height:1.5}
 .platform-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:5px 6px 5px 11px;border-radius:999px;
+  display:inline-flex;align-items:center;gap:4px;
+  padding:4px 5px 4px 10px;border-radius:999px;
   border:1px solid var(--border);background:var(--card);
-  color:var(--text-2);font-size:12.5px;font-weight:500;
+  color:var(--text-2);font-size:12px;font-weight:500;
   cursor:pointer;transition:.15s;user-select:none;
 }
 .platform-chip:hover{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
 .platform-chip .pc-x{
-  width:16px;height:16px;border-radius:50%;
-  display:grid;place-items:center;font-size:13px;line-height:1;
+  width:15px;height:15px;border-radius:50%;
+  display:grid;place-items:center;font-size:12px;line-height:1;
   color:var(--text-3);cursor:pointer;transition:.15s;
 }
 .platform-chip .pc-x:hover{background:rgba(220,38,38,.15);color:var(--danger)}
 
 /* 设置里的平台管理 */
 .platform-manage{
-  display:flex;flex-wrap:wrap;gap:6px;min-height:44px;
-  padding:11px 12px;border:1px solid var(--border);
-  border-radius:10px;background:var(--bg);
-  align-content:flex-start;
+  display:flex;flex-wrap:wrap;gap:5px;min-height:42px;
+  padding:10px 11px;border:1px solid var(--border);
+  border-radius:9px;background:var(--bg);align-content:flex-start;
 }
 .platform-manage .platform-chip{background:var(--card)}
 .platform-manage:empty::before{
   content:'暂无常用平台，可在下方添加';
-  color:var(--text-3);font-size:12.5px;margin:auto;
+  color:var(--text-3);font-size:12px;margin:auto;
 }
-.platform-add{display:flex;gap:8px;margin-top:8px}
+.platform-add{display:flex;gap:7px;margin-top:7px}
 .platform-add input{flex:1;min-width:0}
-.platform-add .btn{flex:0 0 auto;padding:10px 16px;font-size:13px}
+.platform-add .btn{flex:0 0 auto;padding:9px 14px;font-size:12.5px}
 
 /* 设置提示 */
 .hint{
-  margin:0;font-size:12.5px;color:var(--text-3);line-height:1.7;
-  padding:12px 14px;background:var(--bg);border-radius:10px;
+  margin:0;font-size:12px;color:var(--text-3);line-height:1.7;
+  padding:11px 13px;background:var(--bg);border-radius:9px;
 }
 .hint b{color:var(--text-2);font-weight:600}
 .hint code{
   background:var(--card);padding:1px 5px;border-radius:4px;
-  font-size:11.5px;border:1px solid var(--border);
+  font-size:11px;border:1px solid var(--border);
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
 }
-.gist-row{display:flex;gap:8px}
+.gist-row{display:flex;gap:7px}
 .gist-row .input{flex:1;min-width:0}
-.gist-row .btn{flex:0 0 auto;padding:10px 14px;font-size:13px}
+.gist-row .btn{flex:0 0 auto;padding:9px 12px;font-size:12.5px}
 
-/* 弹窗里的商品提示 */
+/* 弹窗里的物品提示 */
 .item-hint{
-  display:flex;align-items:center;gap:8px;
-  padding:12px 14px;background:var(--accent-bg);
-  border-radius:10px;font-size:14px;color:var(--accent);font-weight:600;
+  display:flex;align-items:center;gap:7px;
+  padding:10px 13px;background:var(--accent-bg);
+  border-radius:9px;font-size:13.5px;color:var(--accent);font-weight:600;
 }
 .item-hint .ih-label{
-  font-size:11px;font-weight:600;color:var(--accent);opacity:.7;
+  font-size:10.5px;font-weight:600;color:var(--accent);opacity:.7;
   text-transform:uppercase;letter-spacing:.06em;
 }
 
@@ -407,7 +440,6 @@ input::placeholder{color:var(--text-3)}
 </head>
 <body>
 
-<!-- ================= 顶栏 ================= -->
 <header class="topbar">
   <div class="container topbar-inner">
     <div class="brand">
@@ -418,7 +450,7 @@ input::placeholder{color:var(--text-3)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="11" cy="11" r="7"/><path d="m21 21-3.5-3.5"/>
       </svg>
-      <input id="search" class="search-input" type="search" placeholder="搜索物品、平台、备注…" autocomplete="off">
+      <input id="search" class="search-input" type="text" autocomplete="off" aria-label="搜索">
     </div>
     <div class="topbar-actions">
       <span id="syncStatus" class="sync-status">本地模式</span>
@@ -616,7 +648,7 @@ input::placeholder{color:var(--text-3)}
   let currentRecordItemId = null;
   let pushing = false, pendingPush = false, saveTimer = null;
 
-  const expandedHistory = new Set();
+  const expandedSet = new Set();
   const expandedCompare = new Map();
 
   /* ================= DOM ================= */
@@ -724,7 +756,6 @@ input::placeholder{color:var(--text-3)}
           items: d.items,
           platforms: Array.isArray(d.platforms) ? d.platforms.slice() : []
         };
-        // 迁移：如果 platforms 为空，从历史记录中提取
         if (!state.platforms.length) {
           const seen = new Map();
           state.items.forEach(it => {
@@ -772,7 +803,6 @@ input::placeholder{color:var(--text-3)}
           items: parsed.items,
           platforms: Array.isArray(parsed.platforms) ? parsed.platforms : []
         };
-        // 迁移老数据：云端没有 platforms 时，从历史记录提取
         if (!state.platforms.length) {
           const seen = new Map();
           state.items.forEach(it => {
@@ -860,7 +890,7 @@ input::placeholder{color:var(--text-3)}
   function itemCardHTML(item) {
     const stats = calcStats(item);
     const cat = item.category;
-    const showHistory = expandedHistory.has(item.id);
+    const expanded = expandedSet.has(item.id);
     const compareVal = expandedCompare.get(item.id);
     const showCompare = compareVal !== undefined;
 
@@ -868,117 +898,120 @@ input::placeholder{color:var(--text-3)}
       ? '<span class="cat-tag">' + esc(cat) + '</span>'
       : '<span></span>';
 
-    const countText = stats.count > 0 ? stats.count + ' 次购买' : '未记录';
+    const countText = stats.count > 0 ? stats.count + ' 次' : '—';
     const unitSuffix = item.unit ? ' / ' + esc(item.unit) : '';
 
-    const statAvg = stats.avg !== null
-      ? '<div class="stat-value">' + fmtMoney(stats.avg) + '</div>'
-      : '<div class="stat-value empty">—</div>';
-    const statMin = stats.min !== null
-      ? '<div class="stat-value">' + fmtMoney(stats.min) + '</div>'
-      : '<div class="stat-value empty">—</div>';
-    const statLatest = stats.latest
-      ? '<div class="stat-value">' + (unitPrice(stats.latest) === null ? '—' : fmtMoney(unitPrice(stats.latest))) + '</div>'
-      : '<div class="stat-value empty">—</div>';
+    const minVal = stats.min !== null
+      ? '<span class="cp-num">' + fmtMoney(stats.min) + '</span>'
+      : '<span class="cp-num" style="color:var(--text-3);font-weight:500">—</span>';
+    const avgVal = stats.avg !== null
+      ? '<span class="cp-num">' + fmtMoney(stats.avg) + '</span>'
+      : '<span class="cp-num" style="color:var(--text-3);font-weight:500">—</span>';
 
-    let lastRow = '';
+    let lastInfo = '';
     if (stats.latest) {
-      lastRow = '<div class="last-record">' +
-        '<span class="dot"></span>' +
-        '<span class="lr-date">' + esc(shortDate(stats.latest.date)) + '</span>' +
-        '<span class="lr-platform">' + esc(stats.latest.platform || '未填平台') + '</span>' +
-        '<span class="lr-price">' + fmtMoney(unitPrice(stats.latest)) + '</span>' +
-      '</div>';
+      lastInfo = esc(shortDate(stats.latest.date)) + ' · ' + esc(stats.latest.platform || '—');
+    } else {
+      lastInfo = '无记录';
     }
 
-    let historyPanel = '';
-    if (showHistory) {
+    let expandedHTML = '';
+    if (expanded) {
+      let historyRows = '';
       const sorted = (item.records || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
-      const rows = sorted.map(r => recordRowHTML(item, r, stats.minRec)).join('');
-      historyPanel = '<div class="history-panel">' +
-        '<div class="history-head">购买历史 · ' + item.records.length + ' 条</div>' +
-        (rows || '<div style="font-size:13px;color:var(--text-3);padding:8px 4px">还没有记录</div>') +
-      '</div>';
-    }
-
-    let comparePanel = '';
-    if (showCompare) {
-      const inputVal = compareVal === '' ? '' : compareVal;
-      let result = '';
-      const v = Number(compareVal);
-      if (compareVal !== '' && isFinite(v) && v >= 0 && stats.avg !== null) {
-        const diffAvg = stats.avg - v;
-        const pct = stats.avg > 0 ? (diffAvg / stats.avg * 100) : 0;
-        const diffMin = stats.min !== null ? v - stats.min : null;
-
-        let line1, cls1;
-        if (diffAvg > 0.005) {
-          cls1 = 'cmp-good';
-          line1 = '✓ 比均价低 ' + fmtMoney(diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
-        } else if (diffAvg < -0.005) {
-          cls1 = 'cmp-warn';
-          line1 = '↑ 比均价高 ' + fmtMoney(-diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
-        } else {
-          cls1 = 'cmp-muted';
-          line1 = '≈ 与均价持平';
-        }
-
-        let line2 = '';
-        if (diffMin !== null) {
-          if (diffMin < -0.005) {
-            line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">🎉 比历史最低还低 ' + fmtMoney(-diffMin) + '</span></div>';
-          } else if (diffMin > 0.005) {
-            line2 = '<div class="cmp-line"><span class="cmp-badge cmp-muted">比历史最低高 ' + fmtMoney(diffMin) + '</span></div>';
-          } else {
-            line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">= 与历史最低持平</span></div>';
-          }
-        }
-
-        result = '<div class="cmp-line"><span class="cmp-badge ' + cls1 + '">' + line1 + '</span></div>' + line2;
-      } else if (compareVal !== '' && stats.avg === null) {
-        result = '<div class="cmp-line cmp-muted">还没有历史记录，无法对比</div>';
+      if (sorted.length) {
+        historyRows = sorted.map(r => recordRowHTML(item, r, stats.minRec)).join('');
+      } else {
+        historyRows = '<div style="font-size:12.5px;color:var(--text-3);padding:8px 4px">还没有记录</div>';
       }
 
-      comparePanel = '<div class="compare-panel">' +
-        '<div class="compare-input-row">' +
-          '<label>看到的价格</label>' +
-          '<div class="compare-input-wrap">' +
-            '<span class="cur">¥</span>' +
-            '<input class="compare-input" type="number" step="0.01" min="0" inputmode="decimal" ' +
-              'placeholder="输入后自动对比" value="' + esc(inputVal) + '" ' +
-              'data-compare-id="' + esc(item.id) + '">' +
+      const historyPanel =
+        '<div class="history-panel">' +
+          '<div class="history-head">购买历史 · ' + (item.records || []).length + ' 条</div>' +
+          historyRows +
+        '</div>';
+
+      let comparePanel = '';
+      if (showCompare) {
+        const inputVal = compareVal === '' ? '' : compareVal;
+        let result = '';
+        const v = Number(compareVal);
+        if (compareVal !== '' && isFinite(v) && v >= 0 && stats.avg !== null) {
+          const diffAvg = stats.avg - v;
+          const pct = stats.avg > 0 ? (diffAvg / stats.avg * 100) : 0;
+          const diffMin = stats.min !== null ? v - stats.min : null;
+
+          let line1, cls1;
+          if (diffAvg > 0.005) {
+            cls1 = 'cmp-good';
+            line1 = '✓ 比均价低 ' + fmtMoney(diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
+          } else if (diffAvg < -0.005) {
+            cls1 = 'cmp-warn';
+            line1 = '↑ 比均价高 ' + fmtMoney(-diffAvg) + '（' + Math.abs(pct).toFixed(1) + '%）';
+          } else {
+            cls1 = 'cmp-muted';
+            line1 = '≈ 与均价持平';
+          }
+
+          let line2 = '';
+          if (diffMin !== null) {
+            if (diffMin < -0.005) {
+              line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">🎉 比历史最低还低 ' + fmtMoney(-diffMin) + '</span></div>';
+            } else if (diffMin > 0.005) {
+              line2 = '<div class="cmp-line"><span class="cmp-badge cmp-muted">比历史最低高 ' + fmtMoney(diffMin) + '</span></div>';
+            } else {
+              line2 = '<div class="cmp-line"><span class="cmp-badge cmp-good">= 与历史最低持平</span></div>';
+            }
+          }
+
+          result = '<div class="cmp-line"><span class="cmp-badge ' + cls1 + '">' + line1 + '</span></div>' + line2;
+        } else if (compareVal !== '' && stats.avg === null) {
+          result = '<div class="cmp-line cmp-muted">还没有历史记录，无法对比</div>';
+        }
+
+        comparePanel = '<div class="compare-panel">' +
+          '<div class="compare-input-row">' +
+            '<label>看到的价格</label>' +
+            '<div class="compare-input-wrap">' +
+              '<span class="cur">¥</span>' +
+              '<input class="compare-input" type="number" step="0.01" min="0" inputmode="decimal" ' +
+                'placeholder="输入后自动对比" value="' + esc(inputVal) + '" ' +
+                'data-compare-id="' + esc(item.id) + '">' +
+            '</div>' +
           '</div>' +
-        '</div>' +
-        '<div class="compare-result' + (result ? ' show' : '') + '">' + result + '</div>' +
-      '</div>';
+          '<div class="compare-result' + (result ? ' show' : '') + '">' + result + '</div>' +
+        '</div>';
+      }
+
+      expandedHTML =
+        '<div class="card-expanded">' +
+          '<div class="expanded-actions">' +
+            '<button class="btn-tool' + (showCompare ? ' active' : '') + '" data-act="toggle-compare">' +
+              (showCompare ? '收起比价' : '比价') +
+            '</button>' +
+            '<button class="btn-tool" data-act="edit-item">编辑</button>' +
+            '<button class="btn-tool danger" data-act="del-item">删除物品</button>' +
+          '</div>' +
+          historyPanel +
+          comparePanel +
+        '</div>';
     }
 
-    const hasRec = item.records && item.records.length > 0;
-
-    return '<article class="item-card" data-id="' + esc(item.id) + '">' +
-      '<div class="item-head">' +
+    return '<article class="item-card' + (expanded ? ' expanded' : '') + '" data-id="' + esc(item.id) + '">' +
+      '<div class="card-top">' +
         catTag +
         '<span class="buy-count">' + esc(countText) + '</span>' +
       '</div>' +
-      '<h2 class="item-name">' + esc(item.name || '未命名') + '</h2>' +
-      '<div class="stats-row">' +
-        '<div class="stat-cell is-avg"><div class="stat-label">均价' + unitSuffix + '</div>' + statAvg + '</div>' +
-        '<div class="stat-cell is-min"><div class="stat-label">最低' + unitSuffix + '</div>' + statMin + '</div>' +
-        '<div class="stat-cell"><div class="stat-label">最近' + unitSuffix + '</div>' + statLatest + '</div>' +
+      '<h3 class="item-name">' + esc(item.name || '未命名') + '</h3>' +
+      '<div class="card-prices">' +
+        '<div class="cp cp-min">' + minVal + '<span class="cp-lbl">最低' + unitSuffix + '</span></div>' +
+        '<div class="cp cp-avg">' + avgVal + '<span class="cp-lbl">均价' + unitSuffix + '</span></div>' +
       '</div>' +
-      lastRow +
-      (item.note ? '<div class="last-record" style="color:var(--text-3);font-size:12.5px"><span class="dot"></span><span>' + esc(item.note) + '</span></div>' : '') +
-      '<div class="item-actions">' +
-        '<button class="btn-record" data-act="add-rec">＋ 记录购买</button>' +
-        '<button class="btn-tool' + (showHistory ? ' active' : '') + '" data-act="toggle-history">' +
-          (showHistory ? '收起' : '历史') +
-          (hasRec && !showHistory ? ' · ' + item.records.length : '') +
-        '</button>' +
-        '<button class="btn-tool' + (showCompare ? ' active' : '') + '" data-act="toggle-compare">比价</button>' +
-        '<button class="btn-tool" data-act="edit-item">编辑</button>' +
+      '<div class="card-bottom">' +
+        '<span class="last-info">' + lastInfo + '</span>' +
+        '<button class="quick-add" data-act="add-rec" title="记录购买"></button>' +
       '</div>' +
-      historyPanel +
-      comparePanel +
+      expandedHTML +
     '</article>';
   }
 
@@ -1114,7 +1147,6 @@ input::placeholder{color:var(--text-3)}
     }, 60);
   }
 
-  // 常用平台 chips 交互（记录弹窗里）
   $('#platformChips').addEventListener('click', e => {
     const x = e.target.closest('[data-remove]');
     if (x) {
@@ -1155,7 +1187,6 @@ input::placeholder{color:var(--text-3)}
     const qty = qtyRaw === '' ? 1 : Number(qtyRaw);
     if (!isFinite(qty) || qty <= 0) { alert('数量无效'); return; }
 
-    // 记住这个平台
     if (platform) rememberPlatform(platform);
 
     const now = Date.now();
@@ -1193,7 +1224,6 @@ input::placeholder{color:var(--text-3)}
     $('#dlgSettings').showModal();
   });
 
-  // 设置里的平台管理交互
   $('#platformManage').addEventListener('click', e => {
     const x = e.target.closest('[data-remove]');
     if (!x) return;
@@ -1301,16 +1331,22 @@ input::placeholder{color:var(--text-3)}
 
     const actBtn = e.target.closest('[data-act]');
     if (actBtn) {
+      e.stopPropagation();
       const act = actBtn.dataset.act;
 
       if (act === 'add-rec') {
         openRecordDialog(itemId, null);
       } else if (act === 'edit-item') {
         openItemDialog(itemId);
-      } else if (act === 'toggle-history') {
-        if (expandedHistory.has(itemId)) expandedHistory.delete(itemId);
-        else expandedHistory.add(itemId);
-        render();
+      } else if (act === 'del-item') {
+        if (confirm('确定删除「' + item.name + '」？\n该物品的所有购买记录会一并删除。')) {
+          state.items = state.items.filter(x => x.id !== itemId);
+          state.updatedAt = Date.now();
+          expandedSet.delete(itemId);
+          expandedCompare.delete(itemId);
+          save(true);
+          render();
+        }
       } else if (act === 'toggle-compare') {
         if (expandedCompare.has(itemId)) expandedCompare.delete(itemId);
         else expandedCompare.set(itemId, '');
@@ -1332,12 +1368,16 @@ input::placeholder{color:var(--text-3)}
       return;
     }
 
-    const cmpInput = card.querySelector('.compare-input');
-    if (cmpInput && e.target === card) {
-      cmpInput.focus();
+    // 点击卡片空白处切换展开
+    if (expandedSet.has(itemId)) {
+      expandedSet.delete(itemId);
+    } else {
+      expandedSet.add(itemId);
     }
+    render();
   });
 
+  // 比价实时计算
   els.grid.addEventListener('input', e => {
     const inp = e.target.closest('.compare-input');
     if (!inp) return;
