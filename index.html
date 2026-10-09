@@ -61,7 +61,6 @@ input,select,button{font-family:inherit}
   position:absolute;left:10px;top:50%;transform:translateY(-50%);
   width:13px;height:13px;color:var(--text-3);pointer-events:none;
 }
-/* 用 .search-wrap input 提升优先级，且放在通用 input 规则后面声明效果更好 */
 .search-wrap input.search-input{
   width:100%;padding:6px 10px 6px 32px;border:1px solid var(--border);
   border-radius:8px;background:var(--card);color:var(--text);font-size:13px;
@@ -356,7 +355,7 @@ dialog::backdrop{background:rgba(0,0,0,.42);backdrop-filter:blur(3px)}
 }
 @media(max-width:480px){.dlg-foot .btn{flex:1}}
 
-/* 表单 —— 注意：这里不再包含 input[type=search]，避免覆盖顶栏搜索框 */
+/* 表单 */
 .field{display:flex;flex-direction:column;gap:6px}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field label{font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.01em}
@@ -646,7 +645,14 @@ input::placeholder{color:var(--text-3)}
   let editingItemId = null;
   let editingRecord = null;
   let currentRecordItemId = null;
-  let pushing = false, pendingPush = false, saveTimer = null;
+
+  /* 网络任务互斥标志 */
+  let pushing = false, pendingPush = false;
+  let pulling = false;
+
+  /* 定时器 */
+  let saveTimer = null;
+  let searchTimer = null;
 
   const expandedSet = new Set();
   const expandedCompare = new Map();
@@ -668,10 +674,11 @@ input::placeholder{color:var(--text-3)}
     els.status.classList.toggle('err', !!isErr);
   }
 
+  /* 单价计算：严格校验（有限数、非负价、正数数量） */
   function unitPrice(rec) {
     const p = Number(rec.price);
-    const q = Number(rec.qty) || 1;
-    if (!isFinite(p) || q <= 0) return null;
+    const q = Number(rec.qty);
+    if (!isFinite(p) || p < 0 || !isFinite(q) || q <= 0) return null;
     return p / q;
   }
 
@@ -686,7 +693,9 @@ input::placeholder{color:var(--text-3)}
     const sorted = valid.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const latest = sorted[0];
     const minPrice = Math.min(...prices);
-    const minRec = valid.find(r => unitPrice(r) === minPrice) || null;
+
+    /* 使用容差规避 JS 浮点误差，正确高亮历史最低价 */
+    const minRec = valid.find(r => Math.abs(unitPrice(r) - minPrice) < 0.0001) || null;
 
     return {
       count: valid.length,
@@ -696,6 +705,18 @@ input::placeholder{color:var(--text-3)}
       latest,
       minRec
     };
+  }
+
+  /* 从购买记录中推导常用平台（去重、按频次排序） */
+  function derivePlatforms(items) {
+    const seen = new Map();
+    (items || []).forEach(it => {
+      (it.records || []).forEach(r => {
+        const p = (r.platform || '').trim();
+        if (p) seen.set(p, (seen.get(p) || 0) + 1);
+      });
+    });
+    return [...seen.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
   }
 
   /* ================= 常用平台 ================= */
@@ -756,18 +777,7 @@ input::placeholder{color:var(--text-3)}
           items: d.items,
           platforms: Array.isArray(d.platforms) ? d.platforms.slice() : []
         };
-        if (!state.platforms.length) {
-          const seen = new Map();
-          state.items.forEach(it => {
-            (it.records || []).forEach(r => {
-              const p = (r.platform || '').trim();
-              if (p) seen.set(p, (seen.get(p) || 0) + 1);
-            });
-          });
-          state.platforms = [...seen.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .map(e => e[0]);
-        }
+        if (!state.platforms.length) state.platforms = derivePlatforms(state.items);
       }
     } catch (e) {}
   }
@@ -778,8 +788,18 @@ input::placeholder{color:var(--text-3)}
   /* ================= 云端同步 ================= */
   async function pull() {
     if (!cfg.gistId) { setStatus('本地模式'); return; }
-    setStatus('同步中…');
+    if (pulling) { setStatus('同步中…'); return; }
+    pulling = true;
+
     try {
+      /* 本地有未推送的修改：先推上去，避免被远端旧数据覆盖 */
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        await push();
+      }
+
+      setStatus('同步中…');
       const headers = { 'Accept': 'application/vnd.github+json' };
       if (cfg.token) headers['Authorization'] = 'Bearer ' + cfg.token;
 
@@ -795,38 +815,44 @@ input::placeholder{color:var(--text-3)}
 
       if (!file) { await push(); return; }
 
-      const parsed = JSON.parse(file.content || '{}');
-      if (Array.isArray(parsed.items)) {
-        state = {
-          version: 4,
-          updatedAt: parsed.updatedAt || 0,
-          items: parsed.items,
-          platforms: Array.isArray(parsed.platforms) ? parsed.platforms : []
-        };
-        if (!state.platforms.length) {
-          const seen = new Map();
-          state.items.forEach(it => {
-            (it.records || []).forEach(r => {
-              const p = (r.platform || '').trim();
-              if (p) seen.set(p, (seen.get(p) || 0) + 1);
-            });
-          });
-          state.platforms = [...seen.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .map(e => e[0]);
-        }
-        saveLocal();
-        render();
+      let parsed;
+      try {
+        parsed = JSON.parse(file.content || '{}');
+      } catch (e) {
+        throw new Error('远端数据不是有效的 JSON');
       }
+      if (!Array.isArray(parsed.items)) {
+        throw new Error('远端数据格式异常');
+      }
+
+      const remoteAt = parsed.updatedAt || 0;
+      /* 时间戳保护：本地更新则推送，避免丢失本地改动 */
+      if (remoteAt < state.updatedAt) {
+        await push();
+        return;
+      }
+
+      state = {
+        version: 4,
+        updatedAt: remoteAt,
+        items: parsed.items,
+        platforms: Array.isArray(parsed.platforms) ? parsed.platforms : []
+      };
+      if (!state.platforms.length) state.platforms = derivePlatforms(state.items);
+
+      saveLocal();
+      render();
       setStatus('已同步 · ' + timeStr());
     } catch (err) {
       setStatus('同步失败：' + err.message, true);
+    } finally {
+      pulling = false;
     }
   }
 
   async function push() {
-    if (!cfg.gistId || !cfg.token) { setStatus('本地模式'); return; }
-    if (pushing) { pendingPush = true; return; }
+    if (!cfg.gistId || !cfg.token) { setStatus('本地模式'); return false; }
+    if (pushing) { pendingPush = true; return true; }
     pushing = true;
     setStatus('保存中…');
     try {
@@ -843,8 +869,10 @@ input::placeholder{color:var(--text-3)}
       if (!res.ok) throw new Error('HTTP ' + res.status);
       localStorage.setItem(LS_DATA, content);
       setStatus('已保存 · ' + timeStr());
+      return true;
     } catch (err) {
       setStatus('保存失败：' + err.message, true);
+      return false;
     } finally {
       pushing = false;
       if (pendingPush) { pendingPush = false; push(); }
@@ -854,7 +882,19 @@ input::placeholder{color:var(--text-3)}
   function save(immediate) {
     saveLocal();
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(push, immediate ? 0 : 1200);
+    saveTimer = setTimeout(() => {
+      saveTimer = null;   /* 关键：触发后立即置空，避免重复触发 / 误判"待推送" */
+      push();
+    }, immediate ? 0 : 1200);
+  }
+
+  /* 若还有未推送的改动，立即推送一次 */
+  function flushPendingSave() {
+    if (saveTimer) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      push();
+    }
   }
 
   /* ================= 渲染 ================= */
@@ -870,7 +910,7 @@ input::placeholder{color:var(--text-3)}
     els.categoryList.innerHTML = cats.map(c => '<option value="' + esc(c) + '">').join('');
   }
 
-  function recordRowHTML(item, rec, minRec) {
+  function recordRowHTML(rec, minRec) {
     const isMin = minRec && rec.id === minRec.id;
     const qty = Number(rec.qty) || 1;
     const up = unitPrice(rec);
@@ -887,8 +927,7 @@ input::placeholder{color:var(--text-3)}
     '</div>';
   }
 
-  function itemCardHTML(item) {
-    const stats = calcStats(item);
+  function itemCardHTML(item, stats) {
     const cat = item.category;
     const expanded = expandedSet.has(item.id);
     const compareVal = expandedCompare.get(item.id);
@@ -920,7 +959,7 @@ input::placeholder{color:var(--text-3)}
       let historyRows = '';
       const sorted = (item.records || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
       if (sorted.length) {
-        historyRows = sorted.map(r => recordRowHTML(item, r, stats.minRec)).join('');
+        historyRows = sorted.map(r => recordRowHTML(r, stats.minRec)).join('');
       } else {
         historyRows = '<div style="font-size:12.5px;color:var(--text-3);padding:8px 4px">还没有记录</div>';
       }
@@ -1034,20 +1073,32 @@ input::placeholder{color:var(--text-3)}
       );
     }
 
+    /* calcStats 缓存：一次 render 内复用，避免排序 + 渲染重复计算 */
+    const statsCache = new Map();
+    const getStats = it => {
+      let s = statsCache.get(it.id);
+      if (!s) { s = calcStats(it); statsCache.set(it.id, s); }
+      return s;
+    };
+
     items.sort((a, b) => {
-      const sa = calcStats(a), sb = calcStats(b);
+      const sa = getStats(a), sb = getStats(b);
       if (sort === 'name') return (a.name || '').localeCompare(b.name || '', 'zh-CN');
       if (sort === 'records') return (b.records || []).length - (a.records || []).length;
+
       if (sort === 'avg-asc') {
         const va = sa.avg === null ? Infinity : sa.avg;
         const vb = sb.avg === null ? Infinity : sb.avg;
+        if (va === vb) return 0;
         return va - vb;
       }
       if (sort === 'avg-desc') {
         const va = sa.avg === null ? -Infinity : sa.avg;
         const vb = sb.avg === null ? -Infinity : sb.avg;
+        if (va === vb) return 0;
         return vb - va;
       }
+
       const da = sa.latest ? String(sa.latest.date) : '';
       const db = sb.latest ? String(sb.latest.date) : '';
       if (da && db) return db.localeCompare(da);
@@ -1060,11 +1111,22 @@ input::placeholder{color:var(--text-3)}
 
     if (!items.length) {
       els.grid.innerHTML = '';
+      /* 根据筛选状态切换空状态文案，避免误解为数据丢失 */
+      const titleEl = els.empty.querySelector('h3');
+      const descEl = els.empty.querySelector('p');
+      const filtered = !!q || activeCat !== 'all';
+      if (filtered) {
+        titleEl.textContent = '没有匹配的记录';
+        descEl.textContent = q ? '换个关键词，或清空搜索框试试' : '该分类下还没有物品';
+      } else {
+        titleEl.textContent = '还没有记录';
+        descEl.innerHTML = '添加常买的物品，比如牛奶、酱油、蛋白粉<br>每次买完记一笔，自动算出均价和最低价';
+      }
       els.empty.hidden = false;
       return;
     }
     els.empty.hidden = true;
-    els.grid.innerHTML = items.map(itemCardHTML).join('');
+    els.grid.innerHTML = items.map(it => itemCardHTML(it, getStats(it))).join('');
   }
 
   /* ================= 物品编辑弹窗 ================= */
@@ -1260,6 +1322,8 @@ input::placeholder{color:var(--text-3)}
     }
   });
 
+  /* 创建 Gist：只回填输入框，不写 cfg / localStorage，
+     用户点「保存并同步」才真正生效，点「取消」则不生效 */
   $('#btnCreateGist').addEventListener('click', async () => {
     const token = $('#inpToken').value.trim();
     if (!token) {
@@ -1296,14 +1360,11 @@ input::placeholder{color:var(--text-3)}
       }
 
       const data = await res.json();
+      /* 仅回填输入框，不立即写 cfg —— 用户取消则视为放弃 */
       $('#inpGist').value = data.id;
-
-      cfg.gistId = data.id;
-      cfg.token = token;
-      localStorage.setItem(LS_CFG, JSON.stringify(cfg));
       setStatus('已创建 · ' + String(data.id).slice(0, 8) + '…');
 
-      alert('创建成功！\nGist ID：' + data.id + '\n已自动填入并保存，点「保存并同步」确认。');
+      alert('创建成功！\nGist ID：' + data.id + '\n已自动填入，点「保存并同步」确认绑定。');
     } catch (err) {
       alert('创建失败：' + err.message);
     } finally {
@@ -1368,7 +1429,11 @@ input::placeholder{color:var(--text-3)}
       return;
     }
 
-    // 点击卡片空白处切换展开
+    /* 点击展开区域内的历史 / 比价面板，不折叠卡片 */
+    if (e.target.closest('.card-expanded')) {
+      return;
+    }
+
     if (expandedSet.has(itemId)) {
       expandedSet.delete(itemId);
     } else {
@@ -1377,7 +1442,7 @@ input::placeholder{color:var(--text-3)}
     render();
   });
 
-  // 比价实时计算
+  /* 比价实时计算 */
   els.grid.addEventListener('input', e => {
     const inp = e.target.closest('.compare-input');
     if (!inp) return;
@@ -1444,19 +1509,40 @@ input::placeholder{color:var(--text-3)}
     render();
   });
 
-  els.search.addEventListener('input', render);
+  /* 搜索防抖：避免每次击键都重建整张网格 */
+  els.search.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(render, 100);
+  });
   els.sort.addEventListener('change', render);
 
   $('#btnAddItem').addEventListener('click', () => openItemDialog(null));
   $('#btnSync').addEventListener('click', () => pull());
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && saveTimer) {
-      clearTimeout(saveTimer);
-      saveTimer = null;
-      push();
-    }
+  /* ================= 多标签页同步 ================= */
+  window.addEventListener('storage', e => {
+    if (e.key !== LS_DATA || !e.newValue) return;
+    try {
+      const d = JSON.parse(e.newValue);
+      if (!d || !Array.isArray(d.items)) return;
+      state = {
+        version: 4,
+        updatedAt: d.updatedAt || 0,
+        items: d.items,
+        platforms: Array.isArray(d.platforms) ? d.platforms.slice() : []
+      };
+      if (!state.platforms.length) state.platforms = derivePlatforms(state.items);
+      render();
+      setStatus('已同步其他标签页 · ' + timeStr());
+    } catch (err) { /* 忽略损坏的 storage 事件 */ }
   });
+
+  /* ================= 页面生命周期 ================= */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPendingSave();
+  });
+  /* iOS Safari 上 pagehide 更可靠 */
+  window.addEventListener('pagehide', flushPendingSave);
 
   /* ================= 启动 ================= */
   loadLocal();
